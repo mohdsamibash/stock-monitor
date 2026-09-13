@@ -28,28 +28,40 @@
   const fmtDate = (d) => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   function toast(msg, ms = 2500) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, ms); }
 
-  // ---------- filters ----------
+  // ---------- filters: model tabs + colour / capacity / retailer chips ----------
+  const setFilter = (key, value) => { state.filters[key] = state.filters[key] === value ? '' : value; populateFilters(state.stock); render(); };
+  function tab(label, active, onClick) { const b = el('button', 'tab' + (active ? ' active' : ''), label); b.type = 'button'; b.addEventListener('click', onClick); return b; }
+  function fchip(label, active, onClick, { swatch, muted } = {}) {
+    const b = el('button', 'fchip' + (active ? ' active' : '') + (muted ? ' muted' : '')); b.type = 'button';
+    if (swatch) { const d = el('span', 'dot'); d.style.background = swatch; b.appendChild(d); }
+    b.appendChild(el('span', null, label)); b.addEventListener('click', onClick); return b;
+  }
   function populateFilters(stock) {
-    const fill = (sel, opts) => { const s = $(sel); const cur = s.value; s.length = 1; for (const [v, l] of opts) { const o = el('option', null, l); o.value = v; s.appendChild(o); } s.value = cur; };
-    fill('#f-retailer', stock.retailers.map((r) => [r.id, r.name]));
-    // Models and colours are linked: pick a model and only its colours are offered, pick a colour and only
-    // models that ship in it are offered.
+    if (!stock) return;
     const f = state.filters;
-    const modelsForColor = stock.models.filter((m) => !f.color || m.colors.some((c) => c.name === f.color));
-    fill('#f-model', modelsForColor.map((m) => [m.id, m.name]));
-    if (f.model && !modelsForColor.some((m) => m.id === f.model)) { f.model = ''; $('#f-model').value = ''; }
-    const colorSource = f.model ? stock.models.filter((m) => m.id === f.model) : stock.models;
-    const colors = [...new Set(colorSource.flatMap((m) => m.colors.map((c) => c.name)))];
-    fill('#f-color', colors.map((c) => [c, c]));
-    if (f.color && !colors.includes(f.color)) { f.color = ''; $('#f-color').value = ''; }
-    const caps = [...new Set(stock.models.flatMap((m) => m.capacities))];
-    fill('#f-capacity', caps.map((c) => [c, c]));
+    // model tabs
+    const tabs = $('#tabs'); tabs.innerHTML = '';
+    tabs.appendChild(tab('All', !f.model, () => { f.model = ''; populateFilters(stock); render(); }));
+    for (const m of stock.models) tabs.appendChild(tab(m.shortName || m.name, f.model === m.id, () => { f.model = m.id; populateFilters(stock); render(); }));
+    // colours: only those of the selected model (or all), each with its swatch
+    const source = f.model ? stock.models.filter((m) => m.id === f.model) : stock.models;
+    const colours = []; for (const m of source) for (const c of m.colors) if (!colours.some((x) => x.name === c.name)) colours.push(c);
+    if (f.color && !colours.some((c) => c.name === f.color)) f.color = '';
+    const cc = $('#chips-color'); cc.innerHTML = '';
+    cc.appendChild(el('span', 'chiplabel', 'Colour'));
+    for (const c of colours) cc.appendChild(fchip(c.name, f.color === c.name, () => setFilter('color', c.name), { swatch: c.hex }));
+    // capacities
+    const caps = [...new Set(source.flatMap((m) => m.capacities))];
+    const cp = $('#chips-capacity'); cp.innerHTML = '';
+    cp.appendChild(el('span', 'chiplabel', 'Storage'));
+    for (const cap of caps) cp.appendChild(fchip(cap, f.capacity === cap, () => setFilter('capacity', cap)));
+    // retailers + in-stock toggle + clear
+    const cr = $('#chips-retailer'); cr.innerHTML = '';
+    cr.appendChild(el('span', 'chiplabel', 'Retailer'));
+    for (const r of stock.retailers) cr.appendChild(fchip(r.name, f.retailer === r.id, () => setFilter('retailer', r.id)));
+    cr.appendChild(fchip('In stock only', f.instock, () => { f.instock = !f.instock; populateFilters(stock); render(); }, { swatch: 'var(--green)' }));
+    if (f.retailer || f.model || f.color || f.capacity || f.instock) cr.appendChild(fchip('Clear', false, () => { state.filters = { retailer: '', model: '', color: '', capacity: '', instock: false }; populateFilters(stock); render(); }, { muted: true }));
   }
-  for (const [id, key] of [['#f-retailer', 'retailer'], ['#f-model', 'model'], ['#f-color', 'color'], ['#f-capacity', 'capacity']]) {
-    $(id).addEventListener('change', (e) => { state.filters[key] = e.target.value; if (state.stock) populateFilters(state.stock); render(); });
-  }
-  $('#f-instock').addEventListener('change', (e) => { state.filters.instock = e.target.checked; render(); });
-  $('#f-clear').addEventListener('click', () => { state.filters = { retailer: '', model: '', color: '', capacity: '', instock: false }; for (const id of ['#f-retailer', '#f-model', '#f-color', '#f-capacity']) $(id).value = ''; $('#f-instock').checked = false; if (state.stock) populateFilters(state.stock); render(); });
 
   function setUpdated(stock) {
     const u = $('#updated'); u.textContent = '';
@@ -62,7 +74,6 @@
   function render() {
     const stock = state.stock; if (!stock) return;
     const f = state.filters;
-    $('#f-clear').hidden = !(f.retailer || f.model || f.color || f.capacity || f.instock);
     $('#empty').hidden = true;
     $('#counter-num').textContent = stock.summary.inStock;
     $('#counter-label').textContent = `of ${stock.summary.total} in stock`;
@@ -166,8 +177,8 @@
 
   function renderStatus() {
     const st = state.status; if (!st) return;
-    const b = $('#profile-badge'); b.className = `badge profile ${st.profile.profile}`; b.textContent = st.profile.profile;
-    b.title = `${st.profile.reason} · every ${st.profile.intervalMinutes} min${st.nextRunAt ? ` · next ${relative(st.nextRunAt).replace(' ago', '')}` : st.watch || STATIC ? '' : ' · watch loop not running'}`;
+    const u = $('#updated');
+    u.title = `${u.title ? u.title + ' · ' : ''}checks every ${st.profile.intervalMinutes} min (${st.profile.profile})${st.nextRunAt ? ` · next ${relative(st.nextRunAt).replace(' ago', '')}` : ''}`;
   }
 
   // ---------- data ----------

@@ -147,6 +147,19 @@ curl -s -X PUT https://mohdbash.com/api/stock -H "Authorization: Bearer wrong" -
 Then on the Mac, from the Stock Monitor folder: \`npm run publish\` pushes the latest pass, and
 \`npm start\` publishes automatically after every pass. Open https://mohdbash.com/iphone18/ .
 
+## Scheduler Worker (belt and braces for the cloud runs)
+
+GitHub's own cron has been unreliable for this repository, so \`deploy/scheduler-worker/\` contains a tiny
+Cloudflare Worker with Cron Triggers that POSTs to \`/api/refresh\` on the same schedule. It needs no secrets.
+Deploy it once from that folder (it is a separate Worker, not part of the Pages project):
+
+\`\`\`bash
+cd scheduler-worker && npx wrangler deploy
+\`\`\`
+
+Then Cloudflare -> Workers & Pages -> iphone18-scheduler -> Logs shows one line per firing. Both schedulers
+can run side by side: the GitHub workflow has a concurrency group, so overlapping triggers just queue.
+
 ## Notes
 
 * The page is a plain static HTML/CSS/JS page (no React). It polls \`/api/stock\` every 60 s.
@@ -159,5 +172,8 @@ Then on the Mac, from the Stock Monitor folder: \`npm run publish\` pushes the l
 * GET /api/stock is cached for 30 s at the edge and allows cross-origin reads.
 `);
 
+// scheduler worker (kept in deploy/scheduler-worker, copied into the package)
+const WORKER_SRC = path.join(ROOT, 'deploy', 'scheduler-worker');
+if (fs.existsSync(WORKER_SRC)) fs.cpSync(WORKER_SRC, path.join(OUT, 'scheduler-worker'), { recursive: true });
 console.log('built', OUT);
 for (const f of ['public/iphone18/index.html', 'public/iphone18/styles.css', 'public/iphone18/app.js', 'functions/api/stock.js', 'functions/api/refresh.js', 'README-DEPLOY.md']) console.log('  ', f, fs.statSync(path.join(OUT, f)).size, 'B');

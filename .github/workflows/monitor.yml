@@ -3,11 +3,12 @@ name: Kuwait iPhone 18 stock monitor
 on:
   schedule:
     # Times are UTC. Asia/Kuwait = UTC+3.
-    - cron: '*/15 4-20 * * *'        # every 15 min, 07:00-23:59 Kuwait
-    - cron: '0 21-23,0-3 * * *'      # hourly, 00:00-06:59 Kuwait (quiet hours)
-    - cron: '*/5 4-20 18 9 *'        # launch day 18 Sep: every 5 min 07:00-23:59 Kuwait
-    - cron: '*/5 4-20 16 10 *'       # 16 Oct: iPhone Duo pre-orders open
-    - cron: '*/5 4-20 23 10 *'       # 23 Oct: iPhone Duo release
+    # Off-peak minutes (3,18,33,48 instead of 0,15,30,45): GitHub delays or drops jobs queued on the busy quarter hours.
+    - cron: '3,18,33,48 4-20 * * *'          # every 15 min, 07:00-23:59 Kuwait
+    - cron: '7 21-23,0-3 * * *'              # hourly, 00:00-06:59 Kuwait (quiet hours)
+    - cron: '2,7,12,17,22,27,32,37,42,47,52,57 4-20 18 9 *'   # launch day 18 Sep: every 5 min
+    - cron: '2,7,12,17,22,27,32,37,42,47,52,57 4-20 16 10 *'  # 16 Oct: iPhone Duo pre-orders open
+    - cron: '2,7,12,17,22,27,32,37,42,47,52,57 4-20 23 10 *'  # 23 Oct: iPhone Duo release
   workflow_dispatch:                 # manual run / triggered by the website Refresh button
   repository_dispatch:
     types: [refresh]

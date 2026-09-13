@@ -73,18 +73,20 @@ export async function onRequestPost({ env }) {
   const now = new Date().toISOString();
   await env.STOCK_KV.put(KEY, now, { expirationTtl: 600 });
   // Cloud mode: start the GitHub Actions workflow (secrets GH_DISPATCH_TOKEN + GH_REPO on the Pages project).
-  let dispatched = false;
+  // Uses the workflow_dispatch endpoint: a fine-grained token with "Actions: Read and write" is enough.
+  let dispatched = false, dispatchStatus = null;
   if (env.GH_DISPATCH_TOKEN && env.GH_REPO) {
+    const headers = { authorization: \`Bearer \${env.GH_DISPATCH_TOKEN}\`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'mohdbash-iphone18-refresh', 'x-github-api-version': '2022-11-28' };
     try {
-      const r = await fetch(\`https://api.github.com/repos/\${env.GH_REPO}/dispatches\`, {
-        method: 'POST',
-        headers: { authorization: \`Bearer \${env.GH_DISPATCH_TOKEN}\`, accept: 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'mohdbash-iphone18-refresh' },
-        body: JSON.stringify({ event_type: 'refresh' }),
-      });
-      dispatched = r.status === 204;
-    } catch { dispatched = false; }
+      const r = await fetch(\`https://api.github.com/repos/\${env.GH_REPO}/actions/workflows/\${env.GH_WORKFLOW || 'monitor.yml'}/dispatches\`, { method: 'POST', headers, body: JSON.stringify({ ref: env.GH_BRANCH || 'main' }) });
+      dispatchStatus = r.status; dispatched = r.status === 204;
+      if (!dispatched) { // fallback for tokens that have Contents: write instead
+        const r2 = await fetch(\`https://api.github.com/repos/\${env.GH_REPO}/dispatches\`, { method: 'POST', headers, body: JSON.stringify({ event_type: 'refresh' }) });
+        if (r2.status === 204) { dispatched = true; dispatchStatus = 204; }
+      }
+    } catch (e) { dispatchStatus = String(e); }
   }
-  return json({ queued: true, pending: true, requestedAt: now, dispatched });
+  return json({ queued: true, pending: true, requestedAt: now, dispatched, dispatchStatus });
 }
 
 export async function onRequestDelete({ request, env }) {
@@ -147,7 +149,7 @@ Then on the Mac, from the Stock Monitor folder: \`npm run publish\` pushes the l
 
 * The page is a plain static HTML/CSS/JS page (no React). It polls \`/api/stock\` every 60 s.
 * The Refresh button calls \`POST /api/refresh\` (max one per 3 min). With the Pages secrets **GH_DISPATCH_TOKEN**
-  (fine-grained GitHub token, Actions: read/write on the monitor repo) and **GH_REPO** (e.g. \`mohdbash/stock-monitor\`)
+  (fine-grained GitHub token limited to the monitor repo with **Actions: Read and write**) and **GH_REPO** (e.g. \`mohdbash/stock-monitor\`)
   it starts the GitHub Actions workflow, which runs a pass and publishes within ~2 min. It also sets a KV flag
   that a monitor running on a Mac (\`npm start\`) picks up. A yellow banner appears
   if the monitor has not published for more than about two intervals.

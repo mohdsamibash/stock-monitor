@@ -13,10 +13,12 @@ const FN = path.join(OUT, 'functions', 'api');
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(PAGE, { recursive: true }); fs.mkdirSync(FN, { recursive: true });
 
+const crypto = await import('node:crypto');
+const ver = (f) => crypto.createHash('md5').update(fs.readFileSync(path.join(PUBLIC_DIR, f))).digest('hex').slice(0, 8);
 let html = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
 html = html
-  .replace('<link rel="stylesheet" href="styles.css">', '<link rel="stylesheet" href="/iphone18/styles.css">\n  <script>window.STOCK_STATIC = true; window.STOCK_API = "";</script>')
-  .replace('<script src="app.js"></script>', '<script src="/iphone18/app.js"></script>')
+  .replace('<link rel="stylesheet" href="styles.css">', `<link rel="stylesheet" href="/iphone18/styles.css?v=${ver('styles.css')}">\n  <script>window.STOCK_STATIC = true; window.STOCK_API = "";</script>`)
+  .replace('<script src="app.js"></script>', `<script src="/iphone18/app.js?v=${ver('app.js')}"></script>`)
   .replace('<title>iPhone 18 · Kuwait Stock</title>', '<title>iPhone 18 · Kuwait Stock — mohdbash.com</title>\n  <meta name="description" content="Live iPhone 18 Pro, Pro Max and Duo availability at Gait, Xcite, Digits and Eureka in Kuwait, refreshed every few minutes.">\n  <meta name="robots" content="noindex">');
 fs.writeFileSync(path.join(PAGE, 'index.html'), html);
 fs.copyFileSync(path.join(PUBLIC_DIR, 'styles.css'), path.join(PAGE, 'styles.css'));

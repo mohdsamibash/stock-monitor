@@ -32,17 +32,24 @@
   function populateFilters(stock) {
     const fill = (sel, opts) => { const s = $(sel); const cur = s.value; s.length = 1; for (const [v, l] of opts) { const o = el('option', null, l); o.value = v; s.appendChild(o); } s.value = cur; };
     fill('#f-retailer', stock.retailers.map((r) => [r.id, r.name]));
-    fill('#f-model', stock.models.map((m) => [m.id, m.name]));
-    const colors = [...new Set(stock.models.flatMap((m) => m.colors.map((c) => c.name)))];
+    // Models and colours are linked: pick a model and only its colours are offered, pick a colour and only
+    // models that ship in it are offered.
+    const f = state.filters;
+    const modelsForColor = stock.models.filter((m) => !f.color || m.colors.some((c) => c.name === f.color));
+    fill('#f-model', modelsForColor.map((m) => [m.id, m.name]));
+    if (f.model && !modelsForColor.some((m) => m.id === f.model)) { f.model = ''; $('#f-model').value = ''; }
+    const colorSource = f.model ? stock.models.filter((m) => m.id === f.model) : stock.models;
+    const colors = [...new Set(colorSource.flatMap((m) => m.colors.map((c) => c.name)))];
     fill('#f-color', colors.map((c) => [c, c]));
+    if (f.color && !colors.includes(f.color)) { f.color = ''; $('#f-color').value = ''; }
     const caps = [...new Set(stock.models.flatMap((m) => m.capacities))];
     fill('#f-capacity', caps.map((c) => [c, c]));
   }
   for (const [id, key] of [['#f-retailer', 'retailer'], ['#f-model', 'model'], ['#f-color', 'color'], ['#f-capacity', 'capacity']]) {
-    $(id).addEventListener('change', (e) => { state.filters[key] = e.target.value; render(); });
+    $(id).addEventListener('change', (e) => { state.filters[key] = e.target.value; if (state.stock) populateFilters(state.stock); render(); });
   }
   $('#f-instock').addEventListener('change', (e) => { state.filters.instock = e.target.checked; render(); });
-  $('#f-clear').addEventListener('click', () => { state.filters = { retailer: '', model: '', color: '', capacity: '', instock: false }; for (const id of ['#f-retailer', '#f-model', '#f-color', '#f-capacity']) $(id).value = ''; $('#f-instock').checked = false; render(); });
+  $('#f-clear').addEventListener('click', () => { state.filters = { retailer: '', model: '', color: '', capacity: '', instock: false }; for (const id of ['#f-retailer', '#f-model', '#f-color', '#f-capacity']) $(id).value = ''; $('#f-instock').checked = false; if (state.stock) populateFilters(state.stock); render(); });
 
   // ---------- render ----------
   function render() {
@@ -134,8 +141,9 @@
   function renderChanges() {
     const wrap = $('#changes'); wrap.innerHTML = ''; wrap.appendChild(el('h2', null, 'Recent changes (24 h)'));
     const ul = el('ul');
-    const changes = (state.history?.changes || []).slice(-40).reverse();
-    if (!changes.length) ul.appendChild(el('li', 'none', 'No status flips recorded in the last 24 hours.'));
+    const REAL = new Set(['IN_STOCK', 'OUT_OF_STOCK']);
+    const changes = (state.history?.changes || []).filter((c) => REAL.has(c.from) && REAL.has(c.to)).slice(-40).reverse();
+    if (!changes.length) ul.appendChild(el('li', 'none', 'No In stock / Out of stock flips in the last 24 hours.'));
     const names = Object.fromEntries((state.stock?.retailers || []).map((r) => [r.id, r.name]));
     const models = Object.fromEntries((state.stock?.models || []).map((m) => [m.id, m.name]));
     for (const c of changes) {

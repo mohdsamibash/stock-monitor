@@ -1,0 +1,60 @@
+name: Kuwait iPhone 18 stock monitor
+
+on:
+  schedule:
+    # Times are UTC. Asia/Kuwait = UTC+3.
+    - cron: '*/15 4-20 * * *'        # every 15 min, 07:00-23:59 Kuwait
+    - cron: '0 21-23,0-3 * * *'      # hourly, 00:00-06:59 Kuwait (quiet hours)
+    - cron: '*/5 4-20 18 9 *'        # launch day 18 Sep: every 5 min 07:00-23:59 Kuwait
+    - cron: '*/5 4-20 16 10 *'       # 16 Oct: iPhone Duo pre-orders open
+    - cron: '*/5 4-20 23 10 *'       # 23 Oct: iPhone Duo release
+  workflow_dispatch:                 # manual run / triggered by the website Refresh button
+  repository_dispatch:
+    types: [refresh]
+
+concurrency:
+  group: stock-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DISABLE_BROWSER_FALLBACK: 'true'
+      ALERT_MACOS: 'false'
+      GAIT_ALLOCATION_CHECK: 'true'
+      MIN_DELAY_MS: '1000'
+      MAX_DELAY_MS: '1500'
+      LOG_LEVEL: info
+      PUBLISH_URL: ${{ secrets.PUBLISH_URL }}
+      PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      ALERT_ON: ${{ vars.ALERT_ON || 'any-in-stock' }}
+      ALERT_CONFIRM_PASSES: ${{ vars.ALERT_CONFIRM_PASSES || '1' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Restore monitor state (history, last snapshot, back-off)
+        uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: monitor-data-${{ github.run_id }}
+          restore-keys: monitor-data-
+      - run: npm ci --omit=dev --ignore-scripts
+      - name: Run one pass and publish
+        run: node src/check.js
+      - name: Save monitor state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data
+          key: monitor-data-${{ github.run_id }}

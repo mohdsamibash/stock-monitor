@@ -135,6 +135,7 @@ html[data-theme="dark"] .btn.icon .moon, html:not([data-theme="dark"]) .btn.icon
   .counter { grid-area: counter; margin-left: 0; justify-self: end; }
   .meta { grid-area: meta; min-width: 0; gap: 8px; }
   .meta .updated { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .meta .updated .req { display: none; }
   .actions { grid-area: actions; justify-self: end; margin-left: 0; }
   .btn.primary { padding: 8px 12px; font-size: 13px; }
   .container { padding: 16px 12px 32px; }

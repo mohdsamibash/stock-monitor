@@ -51,6 +51,13 @@
   $('#f-instock').addEventListener('change', (e) => { state.filters.instock = e.target.checked; render(); });
   $('#f-clear').addEventListener('click', () => { state.filters = { retailer: '', model: '', color: '', capacity: '', instock: false }; for (const id of ['#f-retailer', '#f-model', '#f-color', '#f-capacity']) $(id).value = ''; $('#f-instock').checked = false; if (state.stock) populateFilters(state.stock); render(); });
 
+  function setUpdated(stock) {
+    const u = $('#updated'); u.textContent = '';
+    u.appendChild(el('span', null, `Updated ${relative(stock.generatedAt)}`));
+    u.appendChild(el('span', 'req', ` · ${stock.pass.requests} req`)); // hidden on phones
+    u.title = new Date(stock.generatedAt).toLocaleString();
+  }
+
   // ---------- render ----------
   function render() {
     const stock = state.stock; if (!stock) return;
@@ -59,8 +66,7 @@
     $('#empty').hidden = true;
     $('#counter-num').textContent = stock.summary.inStock;
     $('#counter-label').textContent = `of ${stock.summary.total} in stock`;
-    $('#updated').textContent = `Updated ${relative(stock.generatedAt)} · ${stock.pass.requests} req`;
-    $('#updated').title = new Date(stock.generatedAt).toLocaleString();
+    setUpdated(stock);
     const sites = stock.sites.filter((s) => !f.retailer || s.id === f.retailer);
     const today = kuwaitToday();
     const sections = $('#sections'); sections.innerHTML = '';
@@ -246,5 +252,5 @@
 
   load();
   setInterval(load, 60_000);
-  setInterval(() => { if (state.stock) { $('#updated').textContent = `Updated ${relative(state.stock.generatedAt)} · ${state.stock.pass.requests} req`; renderStatus(); } }, 15_000);
+  setInterval(() => { if (state.stock) { setUpdated(state.stock); renderStatus(); } }, 15_000);
 })();

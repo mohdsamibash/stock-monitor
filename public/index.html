@@ -28,13 +28,24 @@
         <div class="counter" id="counter"><span class="counter-num" id="counter-num">–</span><span class="counter-label" id="counter-label">of 160 in stock</span></div>
         <span class="updated" id="updated">loading…</span>
       </div>
-      <nav class="tabs" id="tabs" aria-label="Model"></nav>
+      <div class="row3">
+        <nav class="tabs" id="tabs" aria-label="Model"></nav>
+        <button class="btn filterbtn" id="filter-open" type="button" aria-haspopup="dialog" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          <span>Filters</span><span class="fcount" id="fcount" hidden></span>
+        </button>
+      </div>
     </div>
   </header>
-  <div class="filters" id="filters" aria-label="Filters">
-    <div class="chiprow" id="chips-color"></div>
-    <div class="chiprow" id="chips-capacity"></div>
-    <div class="chiprow" id="chips-retailer"></div>
+  <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Filters" hidden>
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><span class="sheet-title">Filters</span><button class="btn link" id="filter-clear" type="button">Clear all</button></div>
+    <div class="sheet-section"><div class="sheet-label">Colour</div><div class="chiprow" id="chips-color"></div></div>
+    <div class="sheet-section"><div class="sheet-label">Storage</div><div class="chiprow" id="chips-capacity"></div></div>
+    <div class="sheet-section"><div class="sheet-label">Retailer</div><div class="chiprow" id="chips-retailer"></div></div>
+    <label class="switchrow"><span>In stock only</span><input type="checkbox" id="f-instock" role="switch"><span class="switch"></span></label>
+    <button class="btn primary wide" id="filter-done" type="button">Done</button>
   </div>
 
   <main id="app" class="container">

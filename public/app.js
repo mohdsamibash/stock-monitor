@@ -42,7 +42,27 @@
     const f = state.filters;
     const tabs = $('#tabs'); tabs.innerHTML = '';
     const ink = el('span', 'tabs-ink'); ink.setAttribute('aria-hidden', 'true'); tabs.appendChild(ink);
-    const pick = (id) => { if (f.model === id) return; f.model = id; state.animateModel = true; populateFilters(stock); render(); };
+    // Directional page transition: moving to a tab further right pushes the page up and brings the
+    // new model in from below; moving left does the reverse.
+    const order = ['', ...stock.models.map((m) => m.id)];
+    const pick = (id) => {
+      if (f.model === id || state.switching) return;
+      const dir = order.indexOf(id) > order.indexOf(f.model) ? 1 : -1;
+      const sections = $('#sections');
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const swap = () => {
+        f.model = id; state.animateDir = reduce ? 0 : dir; populateFilters(stock);
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        render();
+        state.switching = false;
+      };
+      if (reduce) return swap();
+      state.switching = true;
+      f.model = id; populateFilters(stock); f.model = order[order.indexOf(id)]; // move the pill immediately
+      sections.classList.remove('slide-in-up', 'slide-in-down');
+      sections.classList.add(dir > 0 ? 'slide-out-up' : 'slide-out-down');
+      setTimeout(swap, 170);
+    };
     tabs.appendChild(tab('All', !f.model, () => pick('')));
     for (const m of stock.models) tabs.appendChild(tab(m.shortName || m.name, f.model === m.id, () => pick(m.id)));
     moveInk();
@@ -153,11 +173,12 @@
       sec.appendChild(grid); sections.appendChild(sec);
     }
     if (!sections.children.length) { $('#empty').hidden = false; $('#empty').textContent = 'Nothing matches these filters.'; }
-    if (state.animateModel) {
-      state.animateModel = false;
-      let i = 0;
-      for (const card of sections.querySelectorAll('.model-head, .card')) { card.classList.add('enter'); card.style.animationDelay = `${Math.min(i++, 12) * 40}ms`; }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (state.animateDir) {
+      const dir = state.animateDir; state.animateDir = 0;
+      sections.classList.remove('slide-out-up', 'slide-out-down', 'slide-in-up', 'slide-in-down');
+      void sections.offsetWidth; // restart the animation
+      sections.classList.add(dir > 0 ? 'slide-in-up' : 'slide-in-down');
+      sections.addEventListener('animationend', () => sections.classList.remove('slide-in-up', 'slide-in-down'), { once: true });
     }
     renderChanges();
   }

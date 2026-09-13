@@ -1,0 +1,26 @@
+{
+  "name": "kw-iphone18-stock-monitor",
+  "version": "1.0.0",
+  "description": "Kuwait iPhone 18 stock monitor: Gait, Xcite, Digits, Eureka",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node src/check.js",
+    "watch": "node src/watch.js",
+    "serve": "node src/server.js",
+    "start": "node src/server.js --with-watch",
+    "digest": "node src/digest.js",
+    "test": "node --test test/*.test.js",
+    "alert:test": "node src/alert-test.js",
+    "publish": "node src/publish-now.js",
+    "build:site": "node scripts/build-site.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.47.0"
+  }
+}

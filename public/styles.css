@@ -129,8 +129,9 @@ html[data-theme="dark"] .btn.icon .moon, html:not([data-theme="dark"]) .btn.icon
   .row { grid-template-columns: 46px 1fr; }
   .brand-title { font-size: 17px; }
   .counter-num { font-size: 22px; }
-  .meta { flex-wrap: wrap; row-gap: 4px; }
-  .meta .updated { flex: 1 1 100%; order: 3; }
+  .meta { flex: 1 1 auto; min-width: 0; gap: 8px; }
+  .meta .updated { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .actions { flex: 0 0 auto; }
   .btn.primary { padding: 8px 12px; font-size: 13px; }
   .container { padding: 16px 12px 32px; }
   .model-head { gap: 6px 10px; align-items: center; }

@@ -8,7 +8,7 @@
   const root = document.documentElement;
   const applyTheme = (t) => { root.dataset.theme = t; };
   const saved = (() => { try { return localStorage.getItem('theme'); } catch { return null; } })();
-  applyTheme(saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  applyTheme(saved || 'light'); // light by default everywhere; dark only when the viewer taps the moon
   $('#theme-toggle').addEventListener('click', () => {
     const t = root.dataset.theme === 'dark' ? 'light' : 'dark';
     applyTheme(t); try { localStorage.setItem('theme', t); } catch {}

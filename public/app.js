@@ -41,8 +41,11 @@
     if (!stock) return;
     const f = state.filters;
     const tabs = $('#tabs'); tabs.innerHTML = '';
-    tabs.appendChild(tab('All', !f.model, () => { f.model = ''; populateFilters(stock); render(); }));
-    for (const m of stock.models) tabs.appendChild(tab(m.shortName || m.name, f.model === m.id, () => { f.model = m.id; populateFilters(stock); render(); }));
+    const ink = el('span', 'tabs-ink'); ink.setAttribute('aria-hidden', 'true'); tabs.appendChild(ink);
+    const pick = (id) => { if (f.model === id) return; f.model = id; state.animateModel = true; populateFilters(stock); render(); };
+    tabs.appendChild(tab('All', !f.model, () => pick('')));
+    for (const m of stock.models) tabs.appendChild(tab(m.shortName || m.name, f.model === m.id, () => pick(m.id)));
+    moveInk();
     const source = f.model ? stock.models.filter((m) => m.id === f.model) : stock.models;
     const colours = []; for (const m of source) for (const c of m.colors) if (!colours.some((x) => x.name === c.name)) colours.push(c);
     if (f.color && !colours.some((c) => c.name === f.color)) f.color = '';
@@ -57,6 +60,16 @@
     const n = activeCount(); const fc = $('#fcount'); fc.hidden = !n; fc.textContent = n;
     $('#filter-open').classList.toggle('active', n > 0);
   }
+  // The dark pill behind the active tab is one element that slides between tabs.
+  function moveInk(animate = true) {
+    const tabs = $('#tabs'); const ink = tabs.querySelector('.tabs-ink'); const active = tabs.querySelector('.tab.active');
+    if (!ink || !active) return;
+    ink.style.transition = animate && ink.dataset.ready ? '' : 'none';
+    ink.style.transform = `translateX(${active.offsetLeft - tabs.scrollLeft}px)`; ink.style.width = `${active.offsetWidth}px`;
+    active.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: ink.dataset.ready ? 'smooth' : 'auto' });
+    requestAnimationFrame(() => { ink.dataset.ready = '1'; ink.style.transition = ''; });
+  }
+  window.addEventListener('resize', () => moveInk(false));
   function openSheet(open) {
     $('#sheet').hidden = !open; $('#sheet-backdrop').hidden = !open; $('#filter-open').setAttribute('aria-expanded', String(open));
     document.body.classList.toggle('sheet-open', open);
@@ -140,6 +153,12 @@
       sec.appendChild(grid); sections.appendChild(sec);
     }
     if (!sections.children.length) { $('#empty').hidden = false; $('#empty').textContent = 'Nothing matches these filters.'; }
+    if (state.animateModel) {
+      state.animateModel = false;
+      let i = 0;
+      for (const card of sections.querySelectorAll('.model-head, .card')) { card.classList.add('enter'); card.style.animationDelay = `${Math.min(i++, 12) * 40}ms`; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     renderChanges();
   }
 

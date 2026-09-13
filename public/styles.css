@@ -129,7 +129,7 @@ html[data-theme="dark"] .btn.icon .moon, html:not([data-theme="dark"]) .btn.icon
   .row { grid-template-columns: 46px 1fr; }
   .brand-title { font-size: 17px; }
   .counter-num { font-size: 22px; }
-  .meta { flex: 1 1 auto; min-width: 0; gap: 8px; }
+  .meta { flex: 1 1 0; min-width: 0; gap: 8px; }
   .meta .updated { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .actions { flex: 0 0 auto; }
   .btn.primary { padding: 8px 12px; font-size: 13px; }

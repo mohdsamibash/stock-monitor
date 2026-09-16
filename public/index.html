@@ -30,6 +30,7 @@
       </div>
       <div class="row3">
         <nav class="tabs" id="tabs" aria-label="Model"></nav>
+        <button class="btn instock" id="instock-toggle" type="button" aria-pressed="false" title="Show only variants that are in stock"><span class="dot"></span><span>In stock</span></button>
         <button class="btn filterbtn" id="filter-open" type="button" aria-haspopup="dialog" aria-expanded="false">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
           <span>Filters</span><span class="fcount" id="fcount" hidden></span>
@@ -44,7 +45,6 @@
     <div class="sheet-section"><div class="sheet-label">Colour</div><div class="chiprow" id="chips-color"></div></div>
     <div class="sheet-section"><div class="sheet-label">Storage</div><div class="chiprow" id="chips-capacity"></div></div>
     <div class="sheet-section"><div class="sheet-label">Retailer</div><div class="chiprow" id="chips-retailer"></div></div>
-    <label class="switchrow"><span>In stock only</span><input type="checkbox" id="f-instock" role="switch"><span class="switch"></span></label>
     <button class="btn primary wide" id="filter-done" type="button">Done</button>
   </div>
 

@@ -36,7 +36,7 @@
     if (swatch) { const d = el('span', 'dot'); d.style.background = swatch; b.appendChild(d); }
     b.appendChild(el('span', null, label)); b.addEventListener('click', onClick); return b;
   }
-  function activeCount() { const f = state.filters; return [f.color, f.capacity, f.retailer].filter(Boolean).length + (f.instock ? 1 : 0); }
+  function activeCount() { const f = state.filters; return [f.color, f.capacity, f.retailer].filter(Boolean).length; }
   function populateFilters(stock) {
     if (!stock) return;
     const f = state.filters;
@@ -76,7 +76,7 @@
     for (const cap of caps) cp.appendChild(fchip(cap, f.capacity === cap, () => setFilter('capacity', cap)));
     const cr = $('#chips-retailer'); cr.innerHTML = '';
     for (const r of stock.retailers) cr.appendChild(fchip(r.name, f.retailer === r.id, () => setFilter('retailer', r.id)));
-    $('#f-instock').checked = f.instock;
+    const it = $('#instock-toggle'); it.classList.toggle('active', f.instock); it.setAttribute('aria-pressed', String(f.instock));
     const n = activeCount(); const fc = $('#fcount'); fc.hidden = !n; fc.textContent = n;
     $('#filter-open').classList.toggle('active', n > 0);
   }
@@ -98,7 +98,7 @@
   $('#filter-done').addEventListener('click', () => openSheet(false));
   $('#sheet-backdrop').addEventListener('click', () => openSheet(false));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openSheet(false); });
-  $('#f-instock').addEventListener('change', (e) => { state.filters.instock = e.target.checked; populateFilters(state.stock); render(); });
+  $('#instock-toggle').addEventListener('click', () => { state.filters.instock = !state.filters.instock; populateFilters(state.stock); render(); });
   $('#filter-clear').addEventListener('click', () => { state.filters = { ...state.filters, retailer: '', color: '', capacity: '', instock: false }; populateFilters(state.stock); render(); });
 
   function setUpdated(stock) {
@@ -172,7 +172,7 @@
       if (!cards) continue;
       sec.appendChild(grid); sections.appendChild(sec);
     }
-    if (!sections.children.length) { $('#empty').hidden = false; $('#empty').textContent = 'Nothing matches these filters.'; }
+    if (!sections.children.length) { $('#empty').hidden = false; $('#empty').textContent = f.instock ? 'Nothing is in stock right now. You will be the first to know.' : 'Nothing matches these filters.'; }
     if (state.animateDir) {
       const dir = state.animateDir; state.animateDir = 0;
       sections.classList.remove('slide-out-up', 'slide-out-down', 'slide-in-up', 'slide-in-down');

@@ -59,7 +59,7 @@
     tabs.appendChild(tab('All', !f.model, () => pick('')));
     for (const m of stock.models) tabs.appendChild(tab(m.shortName || m.name, f.model === m.id, () => pick(m.id)));
     moveInk();
-    const it = $('#instock-toggle'); it.classList.toggle('active', f.instock); it.setAttribute('aria-pressed', String(f.instock));
+    $('#instock-toggle').checked = f.instock;
   }
   // The dark pill behind the active tab is one element that slides between tabs.
   function moveInk(animate = true) {
@@ -71,7 +71,7 @@
     requestAnimationFrame(() => { ink.dataset.ready = '1'; ink.style.transition = ''; });
   }
   window.addEventListener('resize', () => moveInk(false));
-  $('#instock-toggle').addEventListener('click', () => { state.filters.instock = !state.filters.instock; populateFilters(state.stock); render(); });
+  $('#instock-toggle').addEventListener('change', (e) => { state.filters.instock = e.target.checked; populateFilters(state.stock); render(); });
 
   function setUpdated(stock) {
     const u = $('#updated'); u.textContent = '';

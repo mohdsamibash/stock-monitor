@@ -25,12 +25,14 @@
         </div>
       </div>
       <div class="row2">
-        <div class="counter" id="counter"><span class="counter-num" id="counter-num">–</span><span class="counter-label" id="counter-label">of 160 in stock</span></div>
-        <span class="updated" id="updated">loading…</span>
+        <div class="counter-block">
+          <div class="counter" id="counter"><span class="counter-num" id="counter-num">–</span><span class="counter-label" id="counter-label">of 160 in stock</span></div>
+          <span class="updated" id="updated">loading…</span>
+        </div>
+        <button class="btn instock" id="instock-toggle" type="button" aria-pressed="false" title="Show only variants that are in stock"><span class="dot"></span><span>In stock only</span></button>
       </div>
       <div class="row3">
         <nav class="tabs" id="tabs" aria-label="Model"></nav>
-        <button class="btn instock" id="instock-toggle" type="button" aria-pressed="false" title="Show only variants that are in stock"><span class="dot"></span><span>In stock</span></button>
         <button class="btn filterbtn" id="filter-open" type="button" aria-haspopup="dialog" aria-expanded="false">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
           <span>Filters</span><span class="fcount" id="fcount" hidden></span>

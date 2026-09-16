@@ -36,11 +36,12 @@ a { color: inherit; }
 .brand-title { font-size: 20px; font-weight: 700; letter-spacing: -.03em; }
 .brand-sub { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .actions { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
-.row2 { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; }
+.row2 { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.counter-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .counter { display: flex; align-items: baseline; gap: 6px; }
 .counter-num { font-size: 30px; font-weight: 700; letter-spacing: -.04em; color: var(--green); font-variant-numeric: tabular-nums; line-height: 1; }
 .counter-label { font-size: 14px; color: var(--text-2); }
-.updated { font-size: 12px; color: var(--text-3); margin-left: auto; white-space: nowrap; }
+.updated { font-size: 12px; color: var(--text-3); white-space: nowrap; }
 .btn { border: 0; border-radius: 999px; padding: 8px 16px; background: var(--chip); color: var(--text); cursor: pointer; transition: transform var(--ease), background var(--ease), opacity var(--ease); font-weight: 500; }
 .btn:hover { transform: translateY(-1px); } .btn:active { transform: scale(.97); }
 .btn.primary { background: var(--blue); color: #fff; }
@@ -175,6 +176,7 @@ html[data-theme="dark"] .switchrow input:checked + .switchrow input:checked + bo
   .tab { font-size: 13px; padding: 7px 13px; }
   .filterbtn { font-size: 13px; padding: 7px 10px; }
   .instock { font-size: 13px; padding: 7px 11px; gap: 6px; }
+  .tabs { flex: 1 1 auto; }
   .filterbtn span:nth-child(2) { display: none; } /* icon + count only on phones */
   .brand-title { font-size: 18px; }
   .brand-sub { font-size: 11px; }

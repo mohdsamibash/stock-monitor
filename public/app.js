@@ -28,15 +28,8 @@
   const fmtDate = (d) => new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   function toast(msg, ms = 2500) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, ms); }
 
-  // ---------- filters: model pills + a Filters sheet (colour / storage / retailer / in-stock) ----------
-  const setFilter = (key, value) => { state.filters[key] = state.filters[key] === value ? '' : value; populateFilters(state.stock); render(); };
+  // ---------- filters: model pills + the In stock toggle ----------
   function tab(label, active, onClick) { const b = el('button', 'tab' + (active ? ' active' : ''), label); b.type = 'button'; b.addEventListener('click', onClick); return b; }
-  function fchip(label, active, onClick, { swatch } = {}) {
-    const b = el('button', 'fchip' + (active ? ' active' : '')); b.type = 'button';
-    if (swatch) { const d = el('span', 'dot'); d.style.background = swatch; b.appendChild(d); }
-    b.appendChild(el('span', null, label)); b.addEventListener('click', onClick); return b;
-  }
-  function activeCount() { const f = state.filters; return [f.color, f.capacity, f.retailer].filter(Boolean).length; }
   function populateFilters(stock) {
     if (!stock) return;
     const f = state.filters;
@@ -58,7 +51,7 @@
       };
       if (reduce) return swap();
       state.switching = true;
-      f.model = id; populateFilters(stock); f.model = order[order.indexOf(id)]; // move the pill immediately
+      f.model = id; populateFilters(stock); // move the pill immediately
       sections.classList.remove('slide-in-up', 'slide-in-down');
       sections.classList.add(dir > 0 ? 'slide-out-up' : 'slide-out-down');
       setTimeout(swap, 170);
@@ -66,19 +59,7 @@
     tabs.appendChild(tab('All', !f.model, () => pick('')));
     for (const m of stock.models) tabs.appendChild(tab(m.shortName || m.name, f.model === m.id, () => pick(m.id)));
     moveInk();
-    const source = f.model ? stock.models.filter((m) => m.id === f.model) : stock.models;
-    const colours = []; for (const m of source) for (const c of m.colors) if (!colours.some((x) => x.name === c.name)) colours.push(c);
-    if (f.color && !colours.some((c) => c.name === f.color)) f.color = '';
-    const cc = $('#chips-color'); cc.innerHTML = '';
-    for (const c of colours) cc.appendChild(fchip(c.name, f.color === c.name, () => setFilter('color', c.name), { swatch: c.hex }));
-    const caps = [...new Set(source.flatMap((m) => m.capacities))];
-    const cp = $('#chips-capacity'); cp.innerHTML = '';
-    for (const cap of caps) cp.appendChild(fchip(cap, f.capacity === cap, () => setFilter('capacity', cap)));
-    const cr = $('#chips-retailer'); cr.innerHTML = '';
-    for (const r of stock.retailers) cr.appendChild(fchip(r.name, f.retailer === r.id, () => setFilter('retailer', r.id)));
     const it = $('#instock-toggle'); it.classList.toggle('active', f.instock); it.setAttribute('aria-pressed', String(f.instock));
-    const n = activeCount(); const fc = $('#fcount'); fc.hidden = !n; fc.textContent = n;
-    $('#filter-open').classList.toggle('active', n > 0);
   }
   // The dark pill behind the active tab is one element that slides between tabs.
   function moveInk(animate = true) {
@@ -90,16 +71,7 @@
     requestAnimationFrame(() => { ink.dataset.ready = '1'; ink.style.transition = ''; });
   }
   window.addEventListener('resize', () => moveInk(false));
-  function openSheet(open) {
-    $('#sheet').hidden = !open; $('#sheet-backdrop').hidden = !open; $('#filter-open').setAttribute('aria-expanded', String(open));
-    document.body.classList.toggle('sheet-open', open);
-  }
-  $('#filter-open').addEventListener('click', () => openSheet($('#sheet').hidden));
-  $('#filter-done').addEventListener('click', () => openSheet(false));
-  $('#sheet-backdrop').addEventListener('click', () => openSheet(false));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openSheet(false); });
   $('#instock-toggle').addEventListener('click', () => { state.filters.instock = !state.filters.instock; populateFilters(state.stock); render(); });
-  $('#filter-clear').addEventListener('click', () => { state.filters = { ...state.filters, retailer: '', color: '', capacity: '', instock: false }; populateFilters(state.stock); render(); });
 
   function setUpdated(stock) {
     const u = $('#updated'); u.textContent = '';

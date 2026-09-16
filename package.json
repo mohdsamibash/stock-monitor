@@ -16,7 +16,8 @@
     "test": "node --test test/*.test.js",
     "alert:test": "node src/alert-test.js",
     "publish": "node src/publish-now.js",
-    "build:site": "node scripts/build-site.js"
+    "build:site": "node scripts/build-site.js",
+    "deploy:site": "bash scripts/deploy-site.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",

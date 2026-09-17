@@ -227,7 +227,7 @@
     const before = state.stock?.generatedAt;
     const res = await fetch(`${API}/api/refresh`, { method: 'POST' });
     const body = await res.json();
-    toast(body.queued ? 'Refresh requested. The monitor picks it up within 30 s and needs about 2 min…' : (body.error || 'A refresh is already queued…'), 5000);
+    toast(body.queued ? 'Checking all retailers…\nReady in about 2 minutes' : 'A check is already running…\nReady in about 2 minutes', 5000);
     const started = Date.now();
     while (Date.now() - started < 5 * 60_000) {
       await new Promise((r) => setTimeout(r, 5000));
@@ -245,7 +245,7 @@
       const btn = $('#refresh'); btn.disabled = true; btn.textContent = 'Requesting…';
       try {
         const ok = await remoteRefresh(btn);
-        toast(ok ? `Done: ${state.stock.summary.inStock} of ${state.stock.summary.total} in stock` : 'No update arrived. Is the monitor running on the Mac (npm start)?', 6000);
+        toast(ok ? `Updated · ${state.stock.summary.inStock} of ${state.stock.summary.total} in stock` : 'No update arrived yet.\nPlease try again in a minute', 6000);
       } catch (e) { toast(`Refresh failed: ${e.message}`, 6000); }
       btn.disabled = false; btn.textContent = 'Refresh';
     }, true);
@@ -268,11 +268,11 @@
       const body = await res.json();
       if (!res.ok) toast(body.error || `Refresh failed (${res.status})`);
       else {
-        toast(body.started ? 'Checking all retailers, this takes about 1-2 minutes…' : 'A check is already running…', 4000);
+        toast(body.started ? 'Checking all retailers…\nReady in about 2 minutes' : 'A check is already running…\nReady in about 2 minutes', 4000);
         const st = await waitForPass(btn);
         await load();
         if (st?.lastRefreshError) toast(`Refresh failed: ${st.lastRefreshError}`, 6000);
-        else if (state.stock) toast(`Done: ${state.stock.summary.inStock} of ${state.stock.summary.total} in stock · ${state.stock.changes.length} change${state.stock.changes.length === 1 ? '' : 's'}`);
+        else if (state.stock) toast(`Updated · ${state.stock.summary.inStock} of ${state.stock.summary.total} in stock`);
       }
     } catch (e) { toast(`Refresh failed: ${e.message}. Is the server running? (npm start)`, 6000); }
     btn.disabled = false; btn.textContent = 'Refresh';

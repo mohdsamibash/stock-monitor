@@ -22,7 +22,7 @@ export function printSummary(stock) {
     console.log(`\n${m.name.padEnd(28)}${cols}`);
     for (const c of m.colors) for (const cap of m.capacities) {
       const key = `${m.id}|${c.name}|${cap}`;
-      const cells = stock.sites.map((s) => { const r = s.results.find((x) => x.key === key); return `${ICON[r.status]}${r.note ? '*' : ' '}${r.priceKWD != null ? r.priceKWD.toFixed(0) : '   '}`.padEnd(7); }).join('');
+      const cells = stock.sites.map((s) => { const r = s.results.find((x) => x.key === key); if (s.linkOnly) return '↗'.padEnd(7); return `${ICON[r.status]}${r.note ? '*' : ' '}${r.priceKWD != null ? r.priceKWD.toFixed(0) : '   '}`.padEnd(7); }).join('');
       console.log(`  ${(c.name + ' ' + cap).padEnd(26)}${cells}`);
     }
   }

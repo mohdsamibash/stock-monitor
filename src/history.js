@@ -8,6 +8,7 @@ import { STATUS } from '../config/variants.js';
 export function snapshotOf(stock) {
   const snap = {};
   for (const site of stock.sites) {
+    if (site.linkOnly) continue;
     snap[site.id] = {};
     for (const r of site.results) snap[site.id][r.key] = [r.status, r.priceKWD ?? null];
   }

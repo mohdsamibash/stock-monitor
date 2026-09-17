@@ -102,7 +102,7 @@
       else head.appendChild(el('span', 'sub', `Release ${fmtDate(m.releaseDate)}`));
       const modelKeys = new Set(m.colors.flatMap((c) => m.capacities.map((cap) => `${m.id}|${c.name}|${cap}`)));
       let inStock = 0, cells = 0;
-      for (const s of sites) for (const r of s.results) if (modelKeys.has(r.key)) { cells++; if (r.status === 'IN_STOCK') inStock++; }
+      for (const s of sites) { if (s.linkOnly) continue; for (const r of s.results) if (modelKeys.has(r.key)) { cells++; if (r.status === 'IN_STOCK') inStock++; } }
       const stat = el('span', 'stat'); stat.innerHTML = `<b>${inStock}</b> of ${cells} in stock`; head.appendChild(stat);
       sec.appendChild(head);
       const grid = el('div', 'grid');
@@ -122,16 +122,16 @@
           let rowIn = 0;
           for (const s of sites) {
             const r = s.results.find((x) => x.key === key) || { status: 'ERROR' };
-            cardCells++; if (r.status === 'IN_STOCK') { rowIn++; cardIn++; }
-            const chip = el(r.url ? 'a' : 'span', `chip ${r.status}`);
+            if (!s.linkOnly) { cardCells++; if (r.status === 'IN_STOCK') { rowIn++; cardIn++; } }
+            const chip = el(r.url ? 'a' : 'span', s.linkOnly ? 'chip LINK' : `chip ${r.status}`);
             if (r.url) { chip.href = r.url; chip.target = '_blank'; chip.rel = 'noopener'; }
             const best = stock.summary.cheapest?.[key]; if (best && best.siteId === s.id && r.status === 'IN_STOCK') chip.classList.add('best');
-            chip.title = `${s.name}: ${STATUS_LABEL[r.status]}${r.note ? ` (${r.note})` : ''}${r.reason ? `\n${r.reason}` : ''}${r.priceKWD != null ? ` · ${kwd(r.priceKWD)}` : ''}${r.title ? `\n${r.title}` : ''}${r.error ? `\n${r.error}` : ''}${s.checkedAt ? `\nChecked ${relative(s.checkedAt)}` : ''}`;
+            chip.title = s.linkOnly ? `${s.name}: opens this exact variant on their site (no automatic status)` : `${s.name}: ${STATUS_LABEL[r.status]}${r.note ? ` (${r.note})` : ''}${r.reason ? `\n${r.reason}` : ''}${r.priceKWD != null ? ` · ${kwd(r.priceKWD)}` : ''}${r.title ? `\n${r.title}` : ''}${r.error ? `\n${r.error}` : ''}${s.checkedAt ? `\nChecked ${relative(s.checkedAt)}` : ''}`;
             const top = el('span', 'top');
             top.appendChild(el('span', 'r', s.name));
             if (r.priceKWD != null && (r.status !== 'NOT_LISTED' || r.note)) top.appendChild(el('span', 'p', kwdShort(r.priceKWD)));
             chip.appendChild(top);
-            chip.appendChild(el('span', 's', r.note || STATUS_LABEL[r.status]));
+            chip.appendChild(el('span', 's', s.linkOnly ? 'Check site ↗' : (r.note || STATUS_LABEL[r.status])));
             chips.appendChild(chip);
           }
           if (f.instock && !rowIn) continue;

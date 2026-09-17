@@ -118,6 +118,9 @@ html[data-theme="dark"] .btn.icon .moon, html:not([data-theme="dark"]) .btn.icon
 .chip.IN_STOCK { background: var(--chip-in); } .chip.IN_STOCK .r::before { background: var(--green); box-shadow: 0 0 0 3px rgba(52,199,89,.18); }
 .chip.OUT_OF_STOCK { background: var(--chip-out); } .chip.OUT_OF_STOCK .r::before { background: var(--red); }
 .chip.NOT_LISTED { opacity: .45; } .chip.NOT_LISTED .r::before { background: var(--text-3); }
+.chip.LINK { background: var(--chip); box-shadow: inset 0 0 0 1px var(--line); }
+.chip.LINK .r::before { background: var(--blue); }
+.chip.LINK .s { color: var(--blue); }
 .chip.ERROR { background: var(--chip-err); } .chip.ERROR .r::before { background: var(--amber); }
 .chip.best { box-shadow: inset 0 0 0 1.5px var(--blue); background: var(--best); }
 .chip.best .s::after { content: "Best"; margin-left: 6px; font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--blue); }

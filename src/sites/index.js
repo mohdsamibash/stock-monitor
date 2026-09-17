@@ -3,6 +3,7 @@
 import gait from './gait.js';
 import xcite from './xcite.js';
 import digits from './digits.js';
+import alphastore from './alphastore.js';
 
-export const SITES = [gait, xcite, digits];
+export const SITES = [gait, xcite, digits, alphastore];
 export const siteById = (id) => SITES.find((s) => s.id === id);

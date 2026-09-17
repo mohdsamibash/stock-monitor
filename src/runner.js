@@ -57,7 +57,7 @@ async function doPass({ profile = { profile: 'manual', intervalMinutes: null, re
       }
       state.backoff[site.id] = { level: 0 };
       state.consecutiveErrors[site.id] = 0;
-      sites.push({ id: site.id, name: site.name, baseUrl: site.baseUrl, status: 'ok', source: disc.source, listings: disc.listings, resolved: disc.resolved, requests: passRequestCount() - before, checkedAt, results });
+      sites.push({ id: site.id, name: site.name, baseUrl: site.baseUrl, linkOnly: Boolean(site.linkOnly), status: 'ok', source: disc.source, listings: disc.listings, resolved: disc.resolved, requests: passRequestCount() - before, checkedAt, results });
     } catch (e) {
       const blocked = Boolean(e.blocked);
       state.consecutiveErrors[site.id] = (state.consecutiveErrors[site.id] || 0) + 1;
@@ -79,7 +79,7 @@ async function doPass({ profile = { profile: 'manual', intervalMinutes: null, re
     profile,
     pass: { durationMs: Date.now() - started, requests: passRequestCount(), requestsPerHour: requestsPerHour() },
     models: MODELS,
-    retailers: SITES.map((s) => ({ id: s.id, name: s.name, baseUrl: s.baseUrl })),
+    retailers: SITES.map((s) => ({ id: s.id, name: s.name, baseUrl: s.baseUrl, linkOnly: Boolean(s.linkOnly) })),
     sites,
     summary: summarize(sites),
     changes: [],
@@ -140,6 +140,7 @@ export function summarize(sites) {
   const byRetailer = {};
   let inStock = 0, total = 0;
   for (const s of sites) {
+    if (s.linkOnly) continue; // link-only retailers carry no status and are not counted
     const c = { inStock: 0, outOfStock: 0, notListed: 0, error: 0 };
     for (const r of s.results) {
       total++;

@@ -159,6 +159,13 @@ and prints one warning per run. It is controlled by `GAIT_ALLOCATION_CHECK` in `
 (default `true`); set it to `false` to honour the rule strictly (cheaper, but Gait may show
 IN_STOCK for variants whose button says Coming Soon).
 
+### Alpha Store (link-only)
+
+alphastore.com.kw serves every URL (pages, robots.txt, WooCommerce API) through SiteGround's anti-bot
+challenge, so the monitor never requests it. `src/sites/alphastore.js` only generates a deep link per variant
+(`/product/<model>-<capacity>-<colour>/`); the dashboard shows a "Check site" chip and the retailer is excluded
+from totals, history and alerts.
+
 ## Adding a retailer
 
 1. Create `src/sites/<id>.js`. The easiest path is to extend `CatalogAdapter` from

@@ -1,8 +1,8 @@
 # Kuwait iPhone 18 stock monitor
 
 Internal dashboard that tells you, at a glance, whether every iPhone 18 Pro / Pro Max / Duo
-variant is **In stock / Out of stock / Not listed** at four Kuwaiti retailers: Gait, Xcite,
-Digits and Eureka. Pre-order availability counts as "in stock" (that is exactly what the
+variant is **In stock / Out of stock / Not listed** at three Kuwaiti retailers: Gait, Xcite
+and Digits. Pre-order availability counts as "in stock" (that is exactly what the
 retailer feeds report while pre-orders are open).
 
 * Node.js 20+ backend, no framework. Playwright is installed but only used as a DOM fallback:
@@ -10,7 +10,7 @@ retailer feeds report while pre-orders are open).
   plus one small JSON call per Gait child SKU that Magento reports in stock while a Gait
   pre-order window is live (about 25-40 extra, see "Gait pre-order allocation" below).
 * Scraper and UI are separate: the scraper writes `data/stock.json`, the dashboard reads it.
-* 40 variants x 4 retailers = 160 cells. iPhone Duo is fully wired but the UI shows it as
+* 40 variants x 3 retailers = 120 cells. iPhone Duo is fully wired but the UI shows it as
   "Coming soon" until its pre-order date (`config/variants.js`).
 
 ## Setup
@@ -134,7 +134,6 @@ Every call is appended to `data/ai-usage.jsonl` with input/output tokens and est
 | Gait | Magento 2 (Hyvä) | Public GraphQL: the configurable parents `iphone-18-pro` (Pro **and** Pro Max are options on one parent) and `iphone-duo` with every child SKU, `stock_status` and final price | Playwright loads the product page and parses the embedded configurable-product JSON (`window.gaitConfigJson[...]`, incl. the `salable` map) — verified to match GraphQL | Low. GraphQL is Magento core. Would break only if they disable anonymous GraphQL or rename `url_key`s |
 | Xcite | Next.js + Algolia | Same-origin proxy `POST /api/algolia/proxy` (body `{requests, operation:"search"}`) returning `status_key`, `price`, `color`, storage, slug | Playwright renders `/search?q=...` and scans product cards | Medium. The proxy is an internal route; a redeploy could change its body shape. Colour "Blue" is mapped to Glacier via the alias map |
 | Digits | Shopify | `/collections/apple-iphone-18/products.json` (+ one `/products.json?limit=250` scan if a model is missing, e.g. the Duo) with `available` per variant | Playwright renders the collection page and reads sold-out badges | Low. Standard Shopify JSON. Only risk: they move iPhone 18 to a new collection handle (edit `config/selectors.js`) |
-| Eureka | Custom ASP.NET/AngularJS + Algolia | Direct Algolia query (public search-only key from the page) with brand facet `iphone`; `avaqt` = available quantity, `clprc` = price | None (product page is Angular-rendered from `/list/getsngitmdet`) so failures show as Error | Medium. Depends on the embedded search key staying valid and iPhone 18 being filed under brand `iphone` like the 17 series |
 
 ### Gait pre-order allocation ("Coming Soon")
 

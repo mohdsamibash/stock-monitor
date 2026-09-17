@@ -64,22 +64,4 @@ export default {
       addToCart: 'button[name="add"]:not([disabled])',
     },
   },
-  eureka: {
-    platform: 'ASP.NET + AngularJS storefront, Algolia search',
-    base: 'https://www.eureka.com.kw',
-    algolia: { appId: '5GPHMAA239', searchKey: '3d7dbc330852592da244c87ae924a221', index: 'instant_records' },
-    // brand facet is literally "iphone" (not "apple") for phones
-    brandFilter: 'bn:iphone',
-    hitsPerPage: 100,
-    fields: { name: 'itmn', qty: 'avaqt', price: 'clprc', category: 'cn', id: 'objectID' },
-    phoneCategoryPrefix: 'Phones > Mobile Phones',
-    productUrl: (id) => `https://www.eureka.com.kw/products/details/${id}`,
-    itemDetail: (id) => `https://www.eureka.com.kw/list/getsngitmdet?id=${id}`,
-    dom: {
-      title: 'h1.itm_ttl',
-      addToCart: '#AddToCart:not([disabled]), .add-to-cart.btn-buy:not(.disabled)',
-      outOfStock: '.product-stock.out-of-stock, .stock-text',
-      price: '.price, .itm_prc',
-    },
-  },
 };

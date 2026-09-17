@@ -159,12 +159,11 @@ and prints one warning per run. It is controlled by `GAIT_ALLOCATION_CHECK` in `
 (default `true`); set it to `false` to honour the rule strictly (cheaper, but Gait may show
 IN_STOCK for variants whose button says Coming Soon).
 
-### Alpha Store (link-only)
+### Why Alpha Store is not included
 
-alphastore.com.kw serves every URL (pages, robots.txt, WooCommerce API) through SiteGround's anti-bot
-challenge, so the monitor never requests it. `src/sites/alphastore.js` only generates a deep link per variant
-(`/product/<model>-<capacity>-<colour>/`); the dashboard shows a "Check site" chip and the retailer is excluded
-from totals, history and alerts.
+alphastore.com.kw serves every URL (pages, robots.txt, WooCommerce API) through SiteGround's anti-bot challenge,
+so it cannot be checked automatically. It was briefly shown as a link-only chip and removed on 2026-09-17.
+The generic link-only support (`linkOnly: true` on an adapter) remains in the runner and UI if ever needed.
 
 ## Adding a retailer
 

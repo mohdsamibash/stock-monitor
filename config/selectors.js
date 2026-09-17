@@ -64,9 +64,4 @@ export default {
       addToCart: 'button[name="add"]:not([disabled])',
     },
   },
-  alphastore: {
-    platform: 'WooCommerce behind SiteGround anti-bot challenge (link-only, never requested by the monitor)',
-    base: 'https://www.alphastore.com.kw',
-    productUrl: (modelId, capacity, colour) => `https://www.alphastore.com.kw/product/${modelId}-${capacity}-${colour}/`,
-  },
 };

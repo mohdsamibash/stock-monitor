@@ -32,6 +32,7 @@ cp .env.example .env                 # then edit if you want Telegram / AI
 | `npm start` | Dashboard **and** the watch loop in one process (`npm start -- --profile burst` also works) |
 | `npm run digest` | Print / send the daily availability digest now |
 | `npm test` | Unit tests (normaliser, scheduler, history diff) |
+| `npm run test:live` | End-to-end tests against the live site: API contract, UI on desktop + iPhone, data accuracy vs retailer sources, schedule cadence, error paths, accessibility. Note: it triggers real refreshes. |
 
 Open the dashboard on your phone by using your Mac's LAN IP, e.g. `http://192.168.1.20:3000`.
 

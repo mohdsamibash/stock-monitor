@@ -159,7 +159,7 @@
     // Others tab: official price per variant (Gait / Xcite list the same Apple Kuwait price) shown under the capacity for comparison.
     const officialPrice = {};
     if (others) for (const s of stock.sites) if (s.id === 'gait' || s.id === 'xcite') for (const r of s.results) if (r.priceKWD != null && (r.status !== 'NOT_LISTED' || r.note)) officialPrice[r.key] = Math.min(officialPrice[r.key] ?? Infinity, r.priceKWD);
-    const sections = $('#sections'); sections.innerHTML = ''; $('#shop-top').innerHTML = '';
+    const sections = $('#sections'); sections.innerHTML = ''; $('#shop-top').innerHTML = ''; sections.classList.toggle('one-shop', Boolean(shopSite));
 
     for (const m of stock.models) {
       if (f.model && m.id !== f.model) continue;

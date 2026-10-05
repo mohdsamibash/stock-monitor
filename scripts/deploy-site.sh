@@ -5,9 +5,10 @@ set -euo pipefail
 SITE="${SITE_DIR:-$HOME/Desktop/MyWebSite}"
 cd "$(dirname "$0")/.."
 node scripts/build-site.js
-mkdir -p "$SITE/public/iphone18/dashboard" "$SITE/functions/api"
+mkdir -p "$SITE/public/iphone18/dashboard" "$SITE/public/dashboard" "$SITE/functions/api"
 cp deploy/website/public/iphone18/{index.html,app.js,styles.css} "$SITE/public/iphone18/"
-cp deploy/website/public/iphone18/dashboard/index.html "$SITE/public/iphone18/dashboard/"
+cp deploy/website/public/iphone18/dashboard/index.html "$SITE/public/iphone18/dashboard/"   # redirect to /dashboard
+cp deploy/website/public/dashboard/index.html "$SITE/public/dashboard/"
 cp deploy/website/functions/api/{stock.js,refresh.js,track.js,stats.js} "$SITE/functions/api/"
 cd "$SITE"
 npm run build --silent

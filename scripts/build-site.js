@@ -23,9 +23,12 @@ html = html
 fs.writeFileSync(path.join(PAGE, 'index.html'), html);
 fs.copyFileSync(path.join(PUBLIC_DIR, 'styles.css'), path.join(PAGE, 'styles.css'));
 fs.copyFileSync(path.join(PUBLIC_DIR, 'app.js'), path.join(PAGE, 'app.js'));
-// Visitor dashboard (/iphone18/dashboard) + its two functions (D1 binding ANALYTICS_DB, secret DASHBOARD_PASSWORD).
-fs.mkdirSync(path.join(PAGE, 'dashboard'), { recursive: true });
-fs.copyFileSync(path.join(ROOT, 'site', 'dashboard', 'index.html'), path.join(PAGE, 'dashboard', 'index.html'));
+// Visitor dashboard (mohdbash.com/dashboard, covers home + /iphone18) + its two functions (D1 binding ANALYTICS_DB, secret DASHBOARD_PASSWORD).
+const DASH = path.join(OUT, 'public', 'dashboard');
+fs.mkdirSync(DASH, { recursive: true }); fs.mkdirSync(path.join(PAGE, 'dashboard'), { recursive: true });
+fs.copyFileSync(path.join(ROOT, 'site', 'dashboard', 'index.html'), path.join(DASH, 'index.html'));
+// The dashboard used to live at /iphone18/dashboard: keep that link working.
+fs.writeFileSync(path.join(PAGE, 'dashboard', 'index.html'), '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Moved</title><meta http-equiv="refresh" content="0; url=/dashboard/"><script>location.replace("/dashboard/")</script><a href="/dashboard/">The dashboard moved to /dashboard</a>\n');
 for (const f of ['track.js', 'stats.js']) fs.copyFileSync(path.join(ROOT, 'site', 'functions', 'api', f), path.join(FN, f));
 
 fs.writeFileSync(path.join(FN, 'stock.js'), `// Cloudflare Pages Function: /api/stock

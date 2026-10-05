@@ -3,11 +3,11 @@
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const STATUS_LABEL = { IN_STOCK: 'In stock', OUT_OF_STOCK: 'Out of stock', NOT_LISTED: 'Not listed', ERROR: 'Error' };
   const parseHash = () => { const [g, s] = location.hash.replace(/^#/, '').split('/'); return { group: g === 'others' ? 'others' : 'official', shop: s || '' }; };
-  // Anonymous usage counts for the owner's dashboard (/iphone18/dashboard). Live site only, no cookies; the owner's devices opt out.
+  // Anonymous usage counts for the owner's dashboard (mohdbash.com/dashboard). Live site only, no cookies; the owner's devices opt out.
   const track = (type, value = '') => {
     if (!window.STOCK_STATIC || !navigator.sendBeacon) return;
     try { if (localStorage.getItem('iphone18-notrack') === '1') return; } catch {}
-    try { navigator.sendBeacon('/api/track', JSON.stringify({ type, value: String(value), ref: type === 'view' ? document.referrer : '' })); } catch {}
+    try { navigator.sendBeacon('/api/track', JSON.stringify({ page: 'iphone18', type, value: String(value), ref: type === 'view' ? document.referrer : '' })); } catch {}
   };
   const state = { stock: null, status: null, history: null, group: parseHash().group, filters: { retailer: parseHash().shop, model: '', color: '', capacity: '', instock: false } };
 

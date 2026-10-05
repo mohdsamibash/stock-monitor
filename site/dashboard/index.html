@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
-  <title>Visitors · iPhone 18 Stock</title>
+  <title>Visitors · mohdbash.com</title>
   <script>try { if (localStorage.getItem('theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch {}</script>
   <style>
     :root {
@@ -27,6 +27,12 @@
     .seg { position: relative; display: inline-flex; padding: 4px; background: var(--track); border-radius: 999px; }
     .seg button { position: relative; z-index: 1; border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 14px; font-weight: 600; padding: 7px 16px; border-radius: 999px; cursor: pointer; transition: color var(--ease); }
     .seg button[aria-pressed="true"] { color: var(--text); background: var(--card); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+    .links { font-size: 14px; color: var(--text-3); }
+    .links a { color: var(--blue); text-decoration: none; font-weight: 500; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .pages li { cursor: pointer; border-radius: 10px; }
+    .pages li:hover .k { color: var(--blue); }
+    .pages .n small { font-weight: 500; color: var(--text-3); margin-left: 6px; }
     .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; }
     .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 12px; }
     .kpi .lbl { font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 6px; }
@@ -39,7 +45,18 @@
     h2 { margin: 0 0 12px; font-size: 17px; font-weight: 650; letter-spacing: -.01em; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
     h2 small { font-size: 12px; font-weight: 500; color: var(--text-3); }
     .chart { margin-bottom: 12px; }
-    .chart svg { display: block; width: 100%; height: 190px; }
+    /* bar chart: visitors (dark) in front of page views (light), the visitor count sits on top of each bar */
+    .bars { display: flex; gap: 6px; height: 190px; padding-top: 20px; border-bottom: 1px solid var(--line); }
+    .bars .col { position: relative; flex: 1; min-width: 0; }
+    .bars i { position: absolute; left: 12%; right: 12%; bottom: 0; border-radius: 6px 6px 2px 2px; animation: rise .6s cubic-bezier(.25,.1,.25,1); transform-origin: bottom; }
+    .bars .pv { background: var(--bar-2); } .bars .uv { background: var(--bar); }
+    .bars .v { position: absolute; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; line-height: 1; }
+    .bars .v.zero { color: var(--text-3); font-weight: 500; }
+    .bars.dense { gap: 2px; } .bars.dense i { left: 6%; right: 6%; border-radius: 3px 3px 1px 1px; }
+    .bars.dense .v { font-size: 9px; letter-spacing: -.02em; }
+    .bars.dense .v.zero { display: none; }
+    @keyframes rise { from { transform: scaleY(0); } }
+    @media (prefers-reduced-motion: reduce) { .bars i { animation: none; } }
     .chart .axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
     .legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); }
     .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
@@ -68,23 +85,31 @@
     @media (max-width: 720px) {
       .wrap { padding: 0 16px 36px; }
       h1 { font-size: 28px; }
-      .titlebar { align-items: flex-start; flex-direction: column; }
+      .controls { flex-direction: column; gap: 8px; margin-top: 12px; }
       .seg { width: 100%; } .seg button { flex: 1; padding: 7px 8px; }
       .kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
       .kpi .num { font-size: 28px; }
       .card { padding: 14px 16px; border-radius: 18px; }
       .grid { grid-template-columns: 1fr; gap: 10px; }
-      .chart svg { height: 150px; }
+      .bars { height: 160px; gap: 4px; }
+      .bars.dense .v { font-size: 7.5px; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <a class="back" href="/iphone18/">‹ Stock page</a>
+      <div class="links"><a href="/">mohdbash.com</a> · <a href="/iphone18/">Stock page</a></div>
       <div class="titlebar">
-        <div><h1>Visitors</h1><div class="sub">mohdbash.com/iphone18 · Kuwait time</div></div>
-        <nav class="seg" id="range" aria-label="Period" hidden>
+        <div><h1>Visitors</h1><div class="sub">mohdbash.com · Kuwait time</div></div>
+      </div>
+      <div class="controls" id="controls" hidden>
+        <nav class="seg" id="pagesel" aria-label="Page">
+          <button type="button" data-page="all" aria-pressed="true">All pages</button>
+          <button type="button" data-page="home">Home</button>
+          <button type="button" data-page="iphone18">Stock page</button>
+        </nav>
+        <nav class="seg" id="range" aria-label="Period">
           <button type="button" data-days="1">Today</button>
           <button type="button" data-days="7" aria-pressed="true">7 days</button>
           <button type="button" data-days="30">30 days</button>
@@ -104,13 +129,15 @@
       <section class="kpis">
         <div class="card kpi"><div class="lbl">Visitors</div><div class="num" id="k-visitors">–</div><div class="note" id="k-visitors-note"></div></div>
         <div class="card kpi"><div class="lbl">Page views</div><div class="num" id="k-views">–</div><div class="note" id="k-views-note"></div></div>
-        <div class="card kpi live"><div class="lbl"><span class="dot"></span>On the page now</div><div class="num" id="k-live">–</div><div class="note">last 5 minutes</div></div>
-        <div class="card kpi"><div class="lbl">Refresh presses</div><div class="num" id="k-refresh">–</div><div class="note" id="k-refresh-note"></div></div>
+        <div class="card kpi live"><div class="lbl"><span class="dot"></span><span id="k-live-lbl">On the site now</span></div><div class="num" id="k-live">–</div><div class="note">last 5 minutes</div></div>
+        <div class="card kpi"><div class="lbl" id="k-4-lbl">Refresh presses</div><div class="num" id="k-4">–</div><div class="note" id="k-4-note"></div></div>
       </section>
+
+      <section class="card" style="margin-bottom:12px"><h2>Pages <small id="pages-note">visitors · page views</small></h2><ul class="list pages" id="l-pages"></ul></section>
 
       <section class="card chart">
         <h2>Visitors per day <span class="legend"><span><i style="background:var(--bar)"></i>Visitors</span><span><i style="background:var(--bar-2)"></i>Page views</span></span></h2>
-        <svg id="chart" preserveAspectRatio="none" role="img" aria-label="Visitors per day"></svg>
+        <div class="bars" id="chart" role="img" aria-label="Visitors per day"></div>
         <div class="axis"><span id="ax-from"></span><span id="ax-to"></span></div>
       </section>
 
@@ -118,9 +145,9 @@
         <div class="card"><h2>Countries <small>visitors</small></h2><ul class="list" id="l-countries"></ul></div>
         <div class="card"><h2>Devices <small>visitors</small></h2><ul class="list" id="l-devices"></ul></div>
         <div class="card"><h2>Came from <small>visits</small></h2><ul class="list" id="l-sources"></ul></div>
-        <div class="card"><h2>Tabs viewed</h2><ul class="list" id="l-tabs"></ul></div>
-        <div class="card"><h2>Shops picked in Filter</h2><ul class="list" id="l-filters"></ul></div>
-        <div class="card"><h2>Shops tapped <small>went to the shop</small></h2><ul class="list" id="l-clicks"></ul></div>
+        <div class="card stock-only"><h2>Tabs viewed <small>stock page</small></h2><ul class="list" id="l-tabs"></ul></div>
+        <div class="card stock-only"><h2>Shops picked in Filter</h2><ul class="list" id="l-filters"></ul></div>
+        <div class="card stock-only"><h2>Shops tapped <small>went to the shop</small></h2><ul class="list" id="l-clicks"></ul></div>
       </section>
 
       <footer>
@@ -134,9 +161,10 @@
 (() => {
   const $ = (s) => document.querySelector(s);
   const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} }, del(k) { try { localStorage.removeItem(k); } catch {} } };
-  const KEY = 'iphone18-dash';
-  let password = store.get(KEY) || '';
-  let days = 7, timer = null, shopNames = {};
+  const KEY = 'site-dash';
+  let password = store.get(KEY) || store.get('iphone18-dash') || ''; // older key from /iphone18/dashboard
+  let days = Number(store.get('dash-days')) || 7, page = store.get('dash-page') || 'all', timer = null, shopNames = {};
+  const PAGE_NAME = { home: 'Home (mohdbash.com)', iphone18: 'Stock page (/iphone18)' };
   const fmt = (n) => Number(n || 0).toLocaleString('en-US');
   const dayLabel = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
   const regionNames = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }); } catch { return null; } })();
@@ -158,24 +186,25 @@
   }
 
   function chart(data) {
-    const svg = $('#chart');
+    const box = $('#chart');
     const byDay = Object.fromEntries(data.series.map((r) => [r.day, r]));
     const daysList = [];
     for (let t = Date.parse(data.chartFrom + 'T12:00:00Z'); ; t += 86400e3) { const d = new Date(t).toISOString().slice(0, 10); daysList.push(d); if (d >= data.todayDay) break; if (daysList.length > 120) break; }
-    const W = 1000, H = 200, pad = 4, n = daysList.length, slot = W / n, bw = Math.max(2, slot * 0.62);
-    const max = Math.max(1, ...daysList.map((d) => (byDay[d]?.views || 0)), ...daysList.map((d) => (byDay[d]?.visitors || 0)));
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    let out = '';
-    daysList.forEach((d, i) => {
+    const max = Math.max(1, ...daysList.map((d) => Math.max(byDay[d]?.views || 0, byDay[d]?.visitors || 0)));
+    box.classList.toggle('dense', daysList.length > 14);
+    box.innerHTML = '';
+    for (const d of daysList) {
       const r = byDay[d] || { visitors: 0, views: 0 };
-      const x = i * slot + (slot - bw) / 2;
-      const hv = ((r.views || 0) / max) * (H - pad), hu = ((r.visitors || 0) / max) * (H - pad);
-      out += `<g><title>${dayLabel(d)}: ${fmt(r.visitors)} visitors, ${fmt(r.views)} page views</title>`;
-      out += `<rect x="${x}" y="${H - hv}" width="${bw}" height="${Math.max(hv, 0)}" rx="${Math.min(6, bw / 3)}" fill="var(--bar-2)"/>`;
-      out += `<rect x="${x}" y="${H - hu}" width="${bw}" height="${Math.max(hu, r.visitors ? 2 : 0)}" rx="${Math.min(6, bw / 3)}" fill="var(--bar)"/></g>`;
-    });
-    out += `<line x1="0" y1="${H - .5}" x2="${W}" y2="${H - .5}" stroke="var(--line)" stroke-width="1"/>`;
-    svg.innerHTML = out;
+      const pv = ((r.views || 0) / max) * 100, uv = ((r.visitors || 0) / max) * 100;
+      const col = document.createElement('div'); col.className = 'col' + (d === data.todayDay ? ' today' : '');
+      col.title = `${dayLabel(d)}: ${fmt(r.visitors)} visitors, ${fmt(r.views)} page views`;
+      col.innerHTML = '<i class="pv"></i><i class="uv"></i><span class="v"></span>';
+      col.querySelector('.pv').style.height = `${pv}%`;
+      col.querySelector('.uv').style.height = r.visitors ? `max(${uv}%, 2px)` : '0';
+      const v = col.querySelector('.v'); v.textContent = fmt(r.visitors); v.style.bottom = `calc(${Math.max(pv, uv)}% + 4px)`;
+      if (!r.visitors) v.classList.add('zero');
+      box.appendChild(col);
+    }
     $('#ax-from').textContent = dayLabel(daysList[0]);
     $('#ax-to').textContent = 'Today';
   }
@@ -188,8 +217,27 @@
     $('#k-views').textContent = fmt(d.range.views);
     $('#k-views-note').textContent = isToday ? 'today' : `${period} · ${fmt(d.today.views)} today`;
     $('#k-live').textContent = fmt(d.liveNow);
-    $('#k-refresh').textContent = fmt(d.range.refresh);
-    $('#k-refresh-note').textContent = period;
+    $('#k-live-lbl').textContent = d.page === 'all' ? 'On the site now' : 'On the page now';
+    const stock = d.page !== 'home';
+    for (const el of document.querySelectorAll('.stock-only')) el.hidden = !stock;
+    // 4th number: Refresh presses for the stock page; pages per visitor for Home.
+    $('#k-4-lbl').textContent = stock ? 'Refresh presses' : 'Views per visitor';
+    $('#k-4').textContent = stock ? fmt(d.range.refresh) : (d.range.visitors ? (d.range.views / d.range.visitors).toFixed(1) : '0');
+    $('#k-4-note').textContent = stock ? `${period}${d.page === 'all' ? ' · stock page' : ''}` : period;
+    // Pages card: always both pages; tap a row to switch to it.
+    const pl = $('#l-pages'); pl.innerHTML = '';
+    const rowsP = ['home', 'iphone18'].map((k) => d.pages.find((r) => r.k === k) || { k, visitors: 0, views: 0 });
+    const maxP = Math.max(1, ...rowsP.map((r) => r.visitors));
+    for (const r of rowsP) {
+      const li = document.createElement('li'); li.title = `Show only ${PAGE_NAME[r.k]}`;
+      li.innerHTML = `<span class="k"></span><span class="n"></span><span class="b"><span></span></span>`;
+      li.querySelector('.k').textContent = PAGE_NAME[r.k] + (d.page === r.k ? '  ✓' : '');
+      li.querySelector('.n').innerHTML = `${fmt(r.visitors)}<small>${fmt(r.views)} views</small>`;
+      li.querySelector('.b span').style.width = `${r.visitors ? Math.max(3, (r.visitors / maxP) * 100) : 0}%`;
+      li.addEventListener('click', () => setPage(d.page === r.k ? 'all' : r.k));
+      pl.appendChild(li);
+    }
+    $('#pages-note').textContent = `${period} · visitors · views`;
     chart(d);
     list($('#l-countries'), d.countries, country);
     list($('#l-devices'), d.devices, (k) => k || 'Unknown');
@@ -202,17 +250,17 @@
   }
 
   function showLogin(msg) {
-    clearInterval(timer); $('#dash').hidden = true; $('#range').hidden = true; $('#login').hidden = false;
+    clearInterval(timer); $('#dash').hidden = true; $('#controls').hidden = true; $('#login').hidden = false;
     $('#err').textContent = msg || ''; setTimeout(() => $('#pw').focus(), 50);
   }
 
   async function load() {
-    const res = await fetch(`/api/stats?days=${days}`, { headers: { authorization: `Bearer ${password}` }, cache: 'no-store' });
+    const res = await fetch(`/api/stats?days=${days}&page=${page}`, { headers: { authorization: `Bearer ${password}` }, cache: 'no-store' });
     const body = await res.json().catch(() => ({}));
     if (res.status === 401) { store.del(KEY); password = ''; return showLogin('That password is not right.'); }
     if (!res.ok) return showLogin(body.error || `Could not load (${res.status})`);
-    store.set(KEY, password); store.set('iphone18-notrack', '1'); // the owner's own visits are not counted
-    $('#login').hidden = true; $('#dash').hidden = false; $('#range').hidden = false;
+    store.set(KEY, password); store.del('iphone18-dash'); store.set('iphone18-notrack', '1'); // the owner's own visits are not counted (home + stock page)
+    $('#login').hidden = true; $('#dash').hidden = false; $('#controls').hidden = false;
     await namesReady;
     render(body);
     clearInterval(timer); timer = setInterval(() => { if (!document.hidden) load().catch(() => {}); }, 60000);
@@ -227,11 +275,14 @@
     try { await load(); } catch (err) { showLogin(`Could not connect: ${err.message}`); }
     $('#go').disabled = false;
   });
+  const press = (sel, attr, val) => { for (const x of document.querySelectorAll(`${sel} button`)) x.setAttribute('aria-pressed', String(x.dataset[attr] === String(val))); };
+  function setPage(p) { page = p; store.set('dash-page', p); press('#pagesel', 'page', p); load().catch(() => {}); }
   for (const b of document.querySelectorAll('#range button')) b.addEventListener('click', () => {
-    days = Number(b.dataset.days);
-    for (const x of document.querySelectorAll('#range button')) x.setAttribute('aria-pressed', String(x === b));
+    days = Number(b.dataset.days); store.set('dash-days', String(days)); press('#range', 'days', days);
     load().catch(() => {});
   });
+  for (const b of document.querySelectorAll('#pagesel button')) b.addEventListener('click', () => setPage(b.dataset.page));
+  press('#range', 'days', days); press('#pagesel', 'page', page);
   $('#logout').addEventListener('click', () => { store.del(KEY); password = ''; showLogin(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && password && !$('#dash').hidden) load().catch(() => {}); });
 

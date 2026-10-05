@@ -4,13 +4,15 @@
 import { fetchPolite } from '../lib/http.js';
 import { CatalogAdapter, STATUS } from './base.js';
 
+// collections: handles, or null/'*' entries to read the newest 250 products of the whole store (/products.json).
 export function makeShopifyAdapter({ id, name, base, collections }) {
   class ShopifyAdapter extends CatalogAdapter {
     constructor() { super({ id, name, baseUrl: base, group: 'others' }); }
     async fetchListings() {
       const seen = new Set(); const products = [];
       for (const handle of collections) {
-        const res = await fetchPolite(`${base}/collections/${handle}/products.json?limit=250`, { expect: 'json' });
+        const path = handle === '*' ? '/products.json?limit=250' : `/collections/${handle}/products.json?limit=250`;
+        const res = await fetchPolite(`${base}${path}`, { expect: 'json' });
         for (const p of res.body.products || []) if (!seen.has(p.id)) { seen.add(p.id); products.push(p); }
       }
       const out = [];

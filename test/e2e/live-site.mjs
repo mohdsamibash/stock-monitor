@@ -9,7 +9,7 @@ const j = async (u, o) => { const r = await fetch(u, o); let b = null; try { b =
   const s = b?.stock; const sites = s?.sites || [];
   T('A2', 'bundle has stock/status/history', Boolean(b?.stock && b?.status && b?.history));
   const off = sites.filter(x => (x.group || 'official') === 'official'), oth = sites.filter(x => x.group === 'others');
-  T('A3', 'official = Gait, Xcite, Digits; others = 8 shops', off.map(x => x.id).join(',') === 'gait,xcite,digits' && oth.length === 8, `${off.map(x => x.id)} | ${oth.map(x => x.id)}`);
+  T('A3', 'official = Gait, Xcite, Digits; others = 9 shops', off.map(x => x.id).join(',') === 'gait,xcite,digits' && oth.length === 9, `${off.map(x => x.id)} | ${oth.map(x => x.id)}`);
   T('A4', 'each retailer has 40 variant rows', sites.every(x => x.results.length === 40), sites.map(x => x.results.length).join('/'));
   const ageMin = (Date.now() - new Date(s.generatedAt)) / 60000;
   T('A5', 'data fresher than 20 min (15-min cadence + run time)', ageMin < 20, `${ageMin.toFixed(1)} min old, profile ${b.status.profile.profile}`);
@@ -64,7 +64,7 @@ for (const [label, ctxOpts] of [['desktop', { viewport: { width: 1280, height: 9
   await p.click('label.instock'); await p.waitForTimeout(300);
   const links = await p.$$eval('a.chip', a => a.map(x => ({ href: x.href, target: x.target, rel: x.rel })));
   T(`U12-${label}`, 'retailer chips open in new tab with noopener', links.length > 0 && links.every(l => l.target === '_blank' && /noopener/.test(l.rel)), `${links.length} links`);
-  T(`U13-${label}`, 'chip links point to the right retailer domain', links.every(l => /gait\.com\.kw|xcite\.com|digits\.com\.kw|eureka\.com\.kw|best\.com\.kw|chipsorders\.com|mobile2000\.com|wibi\.com\.kw|soooq\.com|990store\.com|talabat\.com/.test(l.href)), links.find(l => !/gait|xcite|digits|eureka|best\.com|chips|mobile2000|wibi|soooq|990store|talabat/.test(l.href))?.href || '');
+  T(`U13-${label}`, 'chip links point to the right retailer domain', links.every(l => /gait\.com\.kw|xcite\.com|digits\.com\.kw|eureka\.com\.kw|best\.com\.kw|chipsorders\.com|mobile2000\.com|wibi\.com\.kw|soooq\.com|990store\.com|talabat\.com/.test(l.href)), links.find(l => !/gait|xcite|digits|eureka|best\.com|chips|mobile2000|wibi|soooq|990store|webstoreshops|talabat/.test(l.href))?.href || '');
   const best = await p.$$eval('.chip.best', c => c.length); const inStock = await p.$$eval('.chip.IN_STOCK', c => c.length);
   T(`U14-${label}`, 'Best badge only on in-stock chips, at most one per row', best <= inStock && await p.$$eval('.row', r => r.every(row => row.querySelectorAll('.chip.best').length <= 1)), `${best} best / ${inStock} in stock`);
   await p.click('#theme-toggle'); await p.waitForTimeout(400);

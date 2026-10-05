@@ -8,6 +8,8 @@ import { makeShopifyAdapter } from './shopify.js';
 export const mobile2000 = makeShopifyAdapter({ id: 'mobile2000', name: 'Mobile 2000', base: 'https://mobile2000.com', collections: ['iphone-18-series'] });
 export const wibi = makeShopifyAdapter({ id: 'wibi', name: 'Wibi', base: 'https://wibi.com.kw', collections: ['apple-iphone-18-series'] });
 export const soooq = makeShopifyAdapter({ id: 'soooq', name: 'Soooq', base: 'https://soooq.com', collections: ['iphone-18-series'] });
+// Web Store sells new grey imports and used phones; 'used'/'refurbished' listings are rejected by the matcher.
+export const webstore = makeShopifyAdapter({ id: 'webstore', name: 'Web Store', base: 'https://webstoreshops.com', collections: ['*'] });
 export const store990 = makeShopifyAdapter({ id: 'store990', name: '990 Store', base: 'https://990store.com', collections: ['apple'] });
 
 // Eureka: catalogue search runs on Algolia with a public search-only key embedded in their pages.

@@ -47,6 +47,25 @@ a { color: inherit; }
 .btn.primary:disabled { opacity: .5; cursor: progress; transform: none; }
 .btn.icon { width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 html[data-theme="dark"] .btn.icon .moon, html:not([data-theme="dark"]) .btn.icon .sun { display: none; }
+/* tab switch + shop picker share one row */
+.row-groups { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.row-groups .groups { margin-top: 0; flex: 1 1 auto; min-width: 0; }
+.shopwrap { position: relative; display: flex; align-items: center; flex: 0 0 auto; }
+.shopbtn { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: #ebebee; color: var(--text-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background var(--ease), color var(--ease); max-width: 190px; }
+html[data-theme="dark"] .shopbtn { background: #2c2c2e; }
+.shopbtn .lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.shopbtn .chev { font-size: 11px; opacity: .7; }
+.shopbtn.active { background: var(--text); color: var(--bg); padding-right: 34px; }
+.shopbtn.active .chev { display: none; }
+.shopclear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(255,255,255,.22); color: var(--bg); font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.shoppop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: 240px; max-height: 60vh; overflow-y: auto; background: var(--card); border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.18), 0 0 0 1px var(--line); padding: 6px; }
+.shopopt { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 14.5px; font-weight: 500; padding: 10px 12px; border-radius: 10px; cursor: pointer; text-align: left; }
+.shopopt:hover { background: var(--chip); }
+.shopopt.sel { background: var(--chip); font-weight: 650; }
+.shopopt .ct { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+.shopopt .ct.has { color: #1a8f3c; font-weight: 600; }
+html[data-theme="dark"] .shopopt .ct.has { color: var(--green); }
+
 /* Official resellers | Others switch: segmented control (pill track + sliding white thumb) */
 .groups { position: relative; display: inline-flex; gap: 0; margin-top: 12px; padding: 4px; background: #ebebee; border-radius: 999px; width: 100%; max-width: 380px; isolation: isolate; }
 html[data-theme="dark"] .groups { background: #2c2c2e; }
@@ -175,8 +194,12 @@ html[data-theme="dark"] .toast { background: rgba(245,245,247,.94); color: #1d1d
 /* ---------- mobile ---------- */
 @media (max-width: 720px) {
   .topbar { padding: 8px 12px 0; }
-  .groups { max-width: none; margin-top: 10px; }
-  .groups button { font-size: 14.5px; padding: 9px 8px; }
+  .row-groups { margin-top: 10px; gap: 6px; }
+  .groups { max-width: none; }
+  .groups button { font-size: 13.5px; padding: 9px 6px; }
+  .shopbtn { height: 42px; padding: 0 12px; font-size: 13.5px; max-width: 128px; }
+  .shopbtn svg { display: none; }
+  .shopbtn.active { padding: 0 32px 0 12px; }
   .row3 { margin: 10px 0 8px; }
   .tab { font-size: 13px; padding: 7px 13px; }
     .instock { font-size: 13px; gap: 6px; padding: 6px 0; }

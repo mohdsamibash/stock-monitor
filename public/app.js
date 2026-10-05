@@ -2,7 +2,8 @@
   const $ = (s) => document.querySelector(s);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const STATUS_LABEL = { IN_STOCK: 'In stock', OUT_OF_STOCK: 'Out of stock', NOT_LISTED: 'Not listed', ERROR: 'Error' };
-  const state = { stock: null, status: null, history: null, group: location.hash === '#others' ? 'others' : 'official', filters: { retailer: '', model: '', color: '', capacity: '', instock: false } };
+  const parseHash = () => { const [g, s] = location.hash.replace(/^#/, '').split('/'); return { group: g === 'others' ? 'others' : 'official', shop: s || '' }; };
+  const state = { stock: null, status: null, history: null, group: parseHash().group, filters: { retailer: parseHash().shop, model: '', color: '', capacity: '', instock: false } };
 
   // ---------- theme ----------
   const root = document.documentElement;
@@ -82,11 +83,43 @@
   window.addEventListener('resize', moveGroupThumb);
   for (const b of document.querySelectorAll('#groups button')) b.addEventListener('click', () => {
     if (state.group === b.dataset.group) return;
-    state.group = b.dataset.group; history.replaceState(null, '', state.group === 'others' ? '#others' : location.pathname + location.search);
+    state.group = b.dataset.group; state.filters.retailer = ''; syncHash();
     const sec = $('#sections'); sec.classList.remove('group-in'); void sec.offsetWidth; sec.classList.add('group-in');
     render();
   });
-  window.addEventListener('hashchange', () => { const g = location.hash === '#others' ? 'others' : 'official'; if (g !== state.group) { state.group = g; render(); } });
+  window.addEventListener('hashchange', () => { const h = parseHash(); if (h.group !== state.group || h.shop !== state.filters.retailer) { state.group = h.group; state.filters.retailer = h.shop; render(); } });
+  function syncHash() {
+    const want = state.group === 'official' && !state.filters.retailer ? '' : `#${state.group}${state.filters.retailer ? '/' + state.filters.retailer : ''}`;
+    if (location.hash !== want) history.replaceState(null, '', want || location.pathname + location.search);
+  }
+  // ---------- shop picker ----------
+  function renderShopButton(stock, shopSite) {
+    $('#shop-label').textContent = shopSite ? shopSite.name : (matchMedia('(max-width: 720px)').matches ? 'Shops' : 'All shops');
+    $('#shop-btn').classList.toggle('active', Boolean(shopSite));
+    $('#shop-clear').hidden = !shopSite;
+    if (!$('#shop-pop').hidden) renderShopList(stock);
+  }
+  function renderShopList(stock) {
+    const pop = $('#shop-pop'); pop.innerHTML = '';
+    const sites = stock.sites.filter((s) => (s.group || 'official') === state.group && !s.linkOnly)
+      .map((s) => ({ s, n: s.results.filter((r) => r.status === 'IN_STOCK').length }))
+      .sort((x, y) => y.n - x.n || x.s.name.localeCompare(y.s.name));
+    const opt = (label, count, id) => {
+      const b = el('button', 'shopopt' + ((state.filters.retailer || '') === id ? ' sel' : '')); b.type = 'button'; b.setAttribute('role', 'option');
+      b.setAttribute('aria-selected', String((state.filters.retailer || '') === id));
+      b.appendChild(el('span', 'nm', label)); b.appendChild(el('span', 'ct' + (count ? ' has' : ''), count == null ? '' : count ? `${count} in stock` : 'none in stock'));
+      b.addEventListener('click', () => { state.filters.retailer = id; closeShops(); syncHash(); render(); });
+      pop.appendChild(b);
+    };
+    opt('All shops', null, '');
+    for (const { s, n } of sites) opt(s.name, n, s.id);
+  }
+  function openShops() { renderShopList(state.stock); $('#shop-pop').hidden = false; $('#shop-btn').setAttribute('aria-expanded', 'true'); }
+  function closeShops() { $('#shop-pop').hidden = true; $('#shop-btn').setAttribute('aria-expanded', 'false'); }
+  $('#shop-btn').addEventListener('click', (e) => { e.stopPropagation(); if (!state.stock) return; $('#shop-pop').hidden ? openShops() : closeShops(); });
+  $('#shop-clear').addEventListener('click', (e) => { e.stopPropagation(); state.filters.retailer = ''; closeShops(); syncHash(); render(); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.shopwrap')) closeShops(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeShops(); });
   $('#instock-toggle').addEventListener('change', (e) => { state.filters.instock = e.target.checked; populateFilters(state.stock); render(); });
 
   function setUpdated(stock) {
@@ -103,8 +136,16 @@
     $('#empty').hidden = true;
     const group = state.group, others = group === 'others';
     const G = stock.summary.byGroup?.[group] || { inStock: stock.summary.inStock, total: stock.summary.total, variantsInStock: 0 };
-    $('#counter-num').textContent = others ? G.variantsInStock : G.inStock;
-    $('#counter-label').textContent = others ? `of ${stock.summary.variants} variants in stock` : `of ${G.total} in stock`;
+    const shopSite = f.retailer ? stock.sites.find((s) => s.id === f.retailer && (s.group || 'official') === group) : null;
+    if (f.retailer && !shopSite) f.retailer = ''; // shop not in this tab
+    if (shopSite) {
+      $('#counter-num').textContent = shopSite.results.filter((r) => r.status === 'IN_STOCK').length;
+      $('#counter-label').textContent = `of ${stock.summary.variants} variants in stock at ${shopSite.name}`;
+    } else {
+      $('#counter-num').textContent = others ? G.variantsInStock : G.inStock;
+      $('#counter-label').textContent = others ? `of ${stock.summary.variants} variants in stock` : `of ${G.total} in stock`;
+    }
+    renderShopButton(stock, shopSite);
     for (const b of document.querySelectorAll('#groups button')) b.setAttribute('aria-pressed', String(b.dataset.group === group));
     moveGroupThumb();
     setUpdated(stock);
@@ -148,7 +189,7 @@
             rowSites = rowSites.filter(({ r }) => r.status === 'IN_STOCK' || r.status === 'OUT_OF_STOCK')
               .filter(({ r }) => !f.instock || r.status === 'IN_STOCK')
               .sort((x, y) => (x.r.status === 'IN_STOCK' ? 0 : 1) - (y.r.status === 'IN_STOCK' ? 0 : 1) || (x.r.priceKWD ?? 1e9) - (y.r.priceKWD ?? 1e9));
-            if (!rowSites.length && !f.instock) chips.appendChild(el('span', 'none-here', 'Not listed at these shops'));
+            if (!rowSites.length && !f.instock && !f.retailer) chips.appendChild(el('span', 'none-here', 'Not listed at these shops'));
           }
           for (const { s, r } of rowSites) {
             if (!s.linkOnly) { cardCells++; if (r.status === 'IN_STOCK') { rowIn++; cardIn++; } }
@@ -167,6 +208,7 @@
             chips.appendChild(chip);
           }
           if (f.instock && !rowIn) continue;
+          if (f.retailer && (!rowSites.length || rowSites.every(({ r }) => r.status === 'NOT_LISTED'))) continue; // chosen shop doesn't list it
           const row = el('div', 'row'); row.appendChild(el('span', 'cap', cap)); row.appendChild(chips); card.appendChild(row); rows++;
         }
         if (!rows) continue;
@@ -176,7 +218,7 @@
       if (!cards) continue;
       sec.appendChild(grid); sections.appendChild(sec);
     }
-    if (!sections.children.length) { $('#empty').hidden = false; $('#empty').textContent = f.instock ? 'Nothing is in stock right now. You will be the first to know.' : 'Nothing matches these filters.'; }
+    if (!sections.children.length) { $('#empty').hidden = false; $('#empty').textContent = f.instock ? (f.retailer ? 'Nothing is in stock at this shop right now.' : 'Nothing is in stock right now. You will be the first to know.') : (f.retailer ? 'This shop does not list any iPhone 18 yet.' : 'Nothing matches these filters.'); }
     if (state.animateDir) {
       const dir = state.animateDir; state.animateDir = 0;
       sections.classList.remove('slide-out-up', 'slide-out-down', 'slide-in-up', 'slide-in-down');
@@ -209,7 +251,7 @@
     const ul = el('ul');
     const REAL = new Set(['IN_STOCK', 'OUT_OF_STOCK']);
     const groupOf = Object.fromEntries((state.stock?.sites || []).map((s) => [s.id, s.group || 'official']));
-    const changes = (state.history?.changes || []).filter((c) => REAL.has(c.from) && REAL.has(c.to) && (groupOf[c.siteId] || 'official') === state.group).slice(-40).reverse();
+    const changes = (state.history?.changes || []).filter((c) => REAL.has(c.from) && REAL.has(c.to) && (groupOf[c.siteId] || 'official') === state.group && (!state.filters.retailer || c.siteId === state.filters.retailer)).slice(-40).reverse();
     if (!changes.length) ul.appendChild(el('li', 'none', 'No In stock / Out of stock flips in the last 24 hours.'));
     const names = Object.fromEntries((state.stock?.retailers || []).map((r) => [r.id, r.name]));
     const models = Object.fromEntries((state.stock?.models || []).map((m) => [m.id, m.name]));

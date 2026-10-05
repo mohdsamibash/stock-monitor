@@ -180,8 +180,11 @@
 
       <section class="grid">
         <div class="card"><h2>Countries <small>unique visitors</small></h2><ul class="list" id="l-countries"></ul></div>
-        <div class="card"><h2>Devices <small>unique visitors</small></h2><ul class="list" id="l-devices"></ul></div>
         <div class="card"><h2>Came from <small>visits</small></h2><ul class="list" id="l-sources"></ul></div>
+        <div class="card"><h2>Device <small>unique visitors</small></h2><ul class="list" id="l-devices"></ul></div>
+        <div class="card"><h2>Operating system <small>unique visitors</small></h2><ul class="list" id="l-oses"></ul></div>
+        <div class="card"><h2>Browser <small>unique visitors</small></h2><ul class="list" id="l-browsers"></ul></div>
+        <div class="card"><h2>Language <small>unique visitors</small></h2><ul class="list" id="l-langs"></ul></div>
         <div class="card stock-only"><h2>Tabs viewed <small>stock page</small></h2><ul class="list" id="l-tabs"></ul></div>
         <div class="card stock-only"><h2>Shops picked in Filter</h2><ul class="list" id="l-filters"></ul></div>
         <div class="card stock-only"><h2>Shops tapped <small>went to the shop</small></h2><ul class="list" id="l-clicks"></ul></div>
@@ -290,7 +293,10 @@
     $('#pages-note').textContent = `${period} · unique visitors`;
     chart(d);
     list($('#l-countries'), d.countries, country);
-    list($('#l-devices'), d.devices, (k) => k || 'Unknown');
+    list($('#l-devices'), d.devices, (k) => ({ Phone: 'Phone (older record)', Desktop: 'Computer (older record)', Tablet: 'Tablet (older record)' }[k] || k || 'Unknown'));
+    list($('#l-oses'), d.oses || [], (k) => k);
+    list($('#l-browsers'), d.browsers || [], (k) => k);
+    list($('#l-langs'), d.langs || [], (k) => { try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(k); } catch { return k; } });
     list($('#l-sources'), d.sources, (k) => k || 'Direct');
     list($('#l-tabs'), d.tabs, (k) => TAB[k] || k);
     list($('#l-filters'), d.filters, (k) => shopNames[k] || k);

@@ -7,7 +7,7 @@
   const track = (type, value = '') => {
     if (!window.STOCK_STATIC || !navigator.sendBeacon) return;
     try { if (localStorage.getItem('iphone18-notrack') === '1') return; } catch {}
-    try { navigator.sendBeacon('/api/track', JSON.stringify({ page: 'iphone18', type, value: String(value), ref: type === 'view' ? document.referrer : '' })); } catch {}
+    try { navigator.sendBeacon('/api/track', JSON.stringify({ page: 'iphone18', type, value: String(value), ref: type === 'view' ? document.referrer : '', t: navigator.maxTouchPoints > 1 ? 1 : 0, lang: (navigator.language || '').slice(0, 2).toLowerCase() })); } catch {}
   };
   const state = { stock: null, status: null, history: null, group: parseHash().group, filters: { retailer: parseHash().shop, model: '', color: '', capacity: '', instock: false } };
 

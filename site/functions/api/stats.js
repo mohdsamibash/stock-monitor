@@ -29,7 +29,7 @@ export async function onRequestGet({ request, env }) {
     `SELECT * FROM (SELECT day, page, ref, ts, LAG(ts) OVER (PARTITION BY ${partition} ORDER BY ts) AS prev FROM events WHERE type = 'view' AND day >= ?${filter}) WHERE prev IS NULL OR ts - prev > ${VISIT_GAP}`;
   const top = (where, col = 'value', count = 'COUNT(*)', limit = 15) =>
     q(`SELECT ${col} AS k, ${count} AS n FROM events WHERE day >= ?${P} AND ${where} GROUP BY ${col} ORDER BY n DESC LIMIT ${limit}`, from);
-  const [summary, todayRow, live, series, devices, countries, sources, tabs, filters, clicks, refresh, first, pages, visits, visitsToday, visitSeries, pageVisits] = await db.batch([
+  const [summary, todayRow, live, series, devices, countries, sources, tabs, filters, clicks, refresh, first, pages, visits, visitsToday, visitSeries, pageVisits, oses, browsers, langs] = await db.batch([
     q(`SELECT COUNT(DISTINCT vid) AS visitors, SUM(type = 'view') AS views FROM events WHERE day >= ?${P}`, from),
     q(`SELECT COUNT(DISTINCT vid) AS visitors, SUM(type = 'view') AS views FROM events WHERE day = ?${P}`, today),
     q(`SELECT COUNT(DISTINCT vid) AS n FROM events WHERE ts > ?${P}`, now - 5 * 60e3),
@@ -47,6 +47,9 @@ export async function onRequestGet({ request, env }) {
     q(`SELECT COUNT(*) AS n FROM (${starts()}) WHERE day = ?`, from, today),
     q(`SELECT day, COUNT(*) AS n FROM (${starts()}) GROUP BY day`, chartFrom),
     q(`SELECT page AS k, COUNT(*) AS n FROM (${starts('vid, page', '')}) GROUP BY page`, from),
+    top("type = 'view' AND os != ''", 'os', 'COUNT(DISTINCT vid)', 10),
+    top("type = 'view' AND browser != ''", 'browser', 'COUNT(DISTINCT vid)', 10),
+    top("type = 'view' AND lang != ''", 'lang', 'COUNT(DISTINCT vid)', 8),
   ]);
   const rows = (r) => r.results || [];
   const visitsByDay = Object.fromEntries(rows(visitSeries).map((r) => [r.day, r.n]));
@@ -57,7 +60,7 @@ export async function onRequestGet({ request, env }) {
     today: { visitors: rows(todayRow)[0]?.visitors || 0, visits: rows(visitsToday)[0]?.n || 0, views: rows(todayRow)[0]?.views || 0 },
     liveNow: rows(live)[0]?.n || 0,
     chartFrom, series: rows(series).map((r) => ({ ...r, visits: visitsByDay[r.day] || 0 })),
-    devices: rows(devices), countries: rows(countries), sources: rows(sources),
+    devices: rows(devices), countries: rows(countries), sources: rows(sources), oses: rows(oses), browsers: rows(browsers), langs: rows(langs),
     tabs: rows(tabs), filters: rows(filters), clicks: rows(clicks), pages: rows(pages).map((r) => ({ ...r, visits: visitsByPage[r.k] || 0 })),
   });
 }

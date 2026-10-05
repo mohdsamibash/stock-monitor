@@ -12,6 +12,27 @@ async function sha(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(buf)].slice(0, 10).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
+// Device type, OS and browser from the user-agent string (no fingerprinting; only these coarse labels are stored).
+// `touch` is sent by the page: iPadOS Safari pretends to be a Mac, but a Mac has no touch screen.
+function parseUA(ua, touch) {
+  let os = 'Other', device = 'Other', m;
+  if ((m = ua.match(/iPhone OS (\d+)/))) { device = 'iPhone'; os = `iOS ${iosMajor(ua, m[1])}`; }
+  else if ((m = ua.match(/iPad.*? OS (\d+)/))) { device = 'iPad'; os = `iPadOS ${iosMajor(ua, m[1])}`; }
+  else if ((m = ua.match(/Android (\d+)/))) { device = /Mobile/.test(ua) ? 'Android phone' : 'Android tablet'; os = `Android ${m[1]}`; }
+  else if (/CrOS/.test(ua)) { device = 'Chromebook'; os = 'ChromeOS'; }
+  else if (/Windows NT/.test(ua)) { device = 'Windows PC'; os = 'Windows'; }
+  else if (/Macintosh|Mac OS X/.test(ua)) { if (touch) { device = 'iPad'; os = 'iPadOS'; } else { device = 'Mac'; os = 'macOS'; } }
+  else if (/Linux/.test(ua)) { device = 'Linux PC'; os = 'Linux'; }
+  const browsers = [[/Instagram/, 'Instagram app'], [/FBAN|FBAV|FB_IAB/, 'Facebook app'], [/Snapchat/, 'Snapchat app'],
+    [/TikTok|musical_ly|BytedanceWebview/, 'TikTok app'], [/LinkedInApp/, 'LinkedIn app'], [/SamsungBrowser/, 'Samsung Internet'],
+    [/EdgA?\/|EdgiOS/, 'Edge'], [/OPR\/|OPiOS/, 'Opera'], [/FxiOS|Firefox\//, 'Firefox'], [/CriOS|Chrome\//, 'Chrome'],
+    [/GSA\//, 'Google app'], [/Version\/[\d.]+.*Safari\//, 'Safari']];
+  const browser = (browsers.find(([re]) => re.test(ua)) || [null, /iPhone|iPad/.test(ua) ? 'In-app browser' : 'Other'])[1];
+  return { device, os, browser };
+}
+// Newer Safari freezes the OS number in the user agent; its own "Version/NN" matches the iOS major version.
+function iosMajor(ua, fromOs) { const v = ua.match(/Version\/(\d+)/); return v && Number(v[1]) > Number(fromOs) ? v[1] : fromOs; }
+
 function source(ref) {
   let host = '';
   try { host = new URL(ref).hostname.replace(/^www\./, '').toLowerCase(); } catch { return 'Direct'; }
@@ -44,10 +65,11 @@ export async function onRequestPost({ request, env }) {
   if ((seen?.n || 0) >= MAX_EVENTS_PER_VISITOR_DAY) return done; // flood guard
 
   const value = typeof body.value === 'string' ? body.value.replace(/[^\w-]/g, '').slice(0, 40) : '';
-  const device = /iPad|Tablet/i.test(ua) ? 'Tablet' : /Mobi|iPhone|Android/i.test(ua) ? 'Phone' : 'Desktop';
+  const { device, os, browser } = parseUA(ua, body.t === 1);
+  const lang = typeof body.lang === 'string' && /^[a-z]{2}$/.test(body.lang) ? body.lang : '';
   const country = String(request.cf?.country || '').slice(0, 2);
   const ref = body.type === 'view' ? source(typeof body.ref === 'string' ? body.ref : '') : '';
-  await db.prepare('INSERT INTO events (ts, day, vid, type, value, country, device, ref, page) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(now, day, vid, body.type, value, country, device, ref, page).run();
+  await db.prepare('INSERT INTO events (ts, day, vid, type, value, country, device, ref, page, os, browser, lang) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(now, day, vid, body.type, value, country, device, ref, page, os, browser, lang).run();
   return done;
 }

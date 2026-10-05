@@ -3,6 +3,12 @@
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const STATUS_LABEL = { IN_STOCK: 'In stock', OUT_OF_STOCK: 'Out of stock', NOT_LISTED: 'Not listed', ERROR: 'Error' };
   const parseHash = () => { const [g, s] = location.hash.replace(/^#/, '').split('/'); return { group: g === 'others' ? 'others' : 'official', shop: s || '' }; };
+  // Anonymous usage counts for the owner's dashboard (/iphone18/dashboard). Live site only, no cookies; the owner's devices opt out.
+  const track = (type, value = '') => {
+    if (!window.STOCK_STATIC || !navigator.sendBeacon) return;
+    try { if (localStorage.getItem('iphone18-notrack') === '1') return; } catch {}
+    try { navigator.sendBeacon('/api/track', JSON.stringify({ type, value: String(value), ref: type === 'view' ? document.referrer : '' })); } catch {}
+  };
   const state = { stock: null, status: null, history: null, group: parseHash().group, filters: { retailer: parseHash().shop, model: '', color: '', capacity: '', instock: false } };
 
   // ---------- theme ----------
@@ -83,7 +89,7 @@
   window.addEventListener('resize', moveGroupThumb);
   for (const b of document.querySelectorAll('#groups button')) b.addEventListener('click', () => {
     if (state.group === b.dataset.group) return;
-    state.group = b.dataset.group; state.filters.retailer = ''; syncHash();
+    state.group = b.dataset.group; state.filters.retailer = ''; syncHash(); track('tab', state.group);
     const sec = $('#sections'); sec.classList.remove('group-in'); void sec.offsetWidth; sec.classList.add('group-in');
     render();
   });
@@ -110,7 +116,7 @@
       const b = el('button', 'shopopt' + ((state.filters.retailer || '') === id ? ' sel' : '')); b.type = 'button'; b.setAttribute('role', 'option');
       b.setAttribute('aria-selected', String((state.filters.retailer || '') === id));
       b.appendChild(el('span', 'nm', label)); b.appendChild(el('span', 'ct' + (count ? ' has' : ''), count == null ? '' : count ? `${count} in stock` : 'none in stock'));
-      b.addEventListener('click', () => { state.filters.retailer = id; closeShops(); syncHash(); render(); });
+      b.addEventListener('click', () => { state.filters.retailer = id; closeShops(); syncHash(); render(); if (id) track('filter', id); });
       pop.appendChild(b);
     };
     opt('All shops', null, '');
@@ -202,7 +208,7 @@
           for (const { s, r } of rowSites) {
             if (!s.linkOnly) { cardCells++; if (r.status === 'IN_STOCK') { rowIn++; cardIn++; } }
             const chip = el(r.url ? 'a' : 'span', s.linkOnly ? 'chip LINK' : `chip ${r.status}`);
-            if (r.url) { chip.href = r.url; chip.target = '_blank'; chip.rel = 'noopener'; }
+            if (r.url) { chip.href = r.url; chip.target = '_blank'; chip.rel = 'noopener'; chip.dataset.site = s.id; }
             const best = cheapestMap[key]; if (best && best.siteId === s.id && r.status === 'IN_STOCK') chip.classList.add('best');
             chip.title = s.linkOnly ? `${s.name}: opens this exact variant on their site (no automatic status)` : `${s.name}: ${STATUS_LABEL[r.status]}${r.note ? ` (${r.note})` : ''}${r.reason ? `\n${r.reason}` : ''}${r.priceKWD != null ? ` · ${kwd(r.priceKWD)}` : ''}${r.title ? `\n${r.title}` : ''}${r.error ? `\n${r.error}` : ''}${s.checkedAt ? `\nChecked ${relative(s.checkedAt)}` : ''}`;
             const top = el('span', 'top');
@@ -335,7 +341,7 @@
   if (STATIC) {
     $('#refresh').addEventListener('click', async (ev) => {
       ev.stopImmediatePropagation();
-      const btn = $('#refresh'); btn.disabled = true; btn.textContent = 'Requesting…';
+      const btn = $('#refresh'); btn.disabled = true; btn.textContent = 'Requesting…'; track('refresh');
       try {
         const ok = await remoteRefresh(btn);
         toast(ok ? `Updated · ${state.stock.summary.inStock} of ${state.stock.summary.total} in stock` : 'No update arrived yet.\nPlease try again in a minute', 6000);
@@ -372,6 +378,8 @@
   });
 
   load();
+  track('view', state.group);
+  $('#sections').addEventListener('click', (e) => { const a = e.target.closest('a.chip[data-site]'); if (a) track('click', a.dataset.site); });
   setInterval(load, 60_000);
   setInterval(() => { if (state.stock) { setUpdated(state.stock); renderStatus(); } }, 15_000);
 })();

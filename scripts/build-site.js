@@ -23,6 +23,10 @@ html = html
 fs.writeFileSync(path.join(PAGE, 'index.html'), html);
 fs.copyFileSync(path.join(PUBLIC_DIR, 'styles.css'), path.join(PAGE, 'styles.css'));
 fs.copyFileSync(path.join(PUBLIC_DIR, 'app.js'), path.join(PAGE, 'app.js'));
+// Visitor dashboard (/iphone18/dashboard) + its two functions (D1 binding ANALYTICS_DB, secret DASHBOARD_PASSWORD).
+fs.mkdirSync(path.join(PAGE, 'dashboard'), { recursive: true });
+fs.copyFileSync(path.join(ROOT, 'site', 'dashboard', 'index.html'), path.join(PAGE, 'dashboard', 'index.html'));
+for (const f of ['track.js', 'stats.js']) fs.copyFileSync(path.join(ROOT, 'site', 'functions', 'api', f), path.join(FN, f));
 
 fs.writeFileSync(path.join(FN, 'stock.js'), `// Cloudflare Pages Function: /api/stock
 // GET  -> latest bundle published by the Kuwait iPhone 18 stock monitor (stored in KV)

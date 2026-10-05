@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Visitors · iPhone 18 Stock</title>
+  <script>try { if (localStorage.getItem('theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch {}</script>
+  <style>
+    :root {
+      --bg: #f5f5f7; --card: #fff; --text: #1d1d1f; --text-2: #6e6e73; --text-3: #a1a1a6; --line: rgba(0,0,0,.06);
+      --shadow: 0 2px 12px rgba(0,0,0,.05), 0 0 1px rgba(0,0,0,.06); --green: #34c759; --green-text: #1a8f3c; --blue: #0071e3;
+      --bar: rgba(0,113,227,.85); --bar-2: rgba(0,113,227,.16); --track: #ebebee; --radius: 20px; --ease: .3s cubic-bezier(.25,.1,.25,1);
+    }
+    html[data-theme="dark"] {
+      --bg: #000; --card: #1c1c1e; --text: #f5f5f7; --text-2: #a1a1a6; --text-3: #6e6e73; --line: rgba(255,255,255,.08);
+      --shadow: 0 2px 12px rgba(0,0,0,.4); --green: #30d158; --green-text: #30d158; --blue: #2997ff; --bar: rgba(41,151,255,.9); --bar-2: rgba(41,151,255,.22); --track: #2c2c2e;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px 48px; }
+    header { padding: 20px 0 8px; }
+    .back { color: var(--blue); text-decoration: none; font-size: 14px; font-weight: 500; }
+    .titlebar { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+    h1 { margin: 0; font-size: 34px; letter-spacing: -.035em; line-height: 1.05; }
+    .sub { color: var(--text-2); font-size: 14px; margin-top: 4px; }
+    .seg { position: relative; display: inline-flex; padding: 4px; background: var(--track); border-radius: 999px; }
+    .seg button { position: relative; z-index: 1; border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 14px; font-weight: 600; padding: 7px 16px; border-radius: 999px; cursor: pointer; transition: color var(--ease); }
+    .seg button[aria-pressed="true"] { color: var(--text); background: var(--card); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 12px; }
+    .kpi .lbl { font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 6px; }
+    .kpi .num { font-size: 34px; font-weight: 700; letter-spacing: -.03em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .kpi .note { font-size: 12px; color: var(--text-3); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(52,199,89,.5); animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52,199,89,.45); } 70% { box-shadow: 0 0 0 8px rgba(52,199,89,0); } 100% { box-shadow: 0 0 0 0 rgba(52,199,89,0); } }
+    @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
+    .live .num { color: var(--green-text); }
+    h2 { margin: 0 0 12px; font-size: 17px; font-weight: 650; letter-spacing: -.01em; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    h2 small { font-size: 12px; font-weight: 500; color: var(--text-3); }
+    .chart { margin-bottom: 12px; }
+    .chart svg { display: block; width: 100%; height: 190px; }
+    .chart .axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
+    .legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); }
+    .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .list { list-style: none; margin: 0; padding: 0; }
+    .list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; padding: 6px 0; }
+    .list .k { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list .n { font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .list .b { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: var(--track); overflow: hidden; }
+    .list .b span { display: block; height: 100%; border-radius: 3px; background: var(--bar); animation: grow .7s cubic-bezier(.25,.1,.25,1); }
+    @keyframes grow { from { width: 0; } }
+    @media (prefers-reduced-motion: reduce) { .list .b span { animation: none; } }
+    .empty { color: var(--text-3); font-size: 13.5px; padding: 6px 0; }
+    footer { margin-top: 18px; color: var(--text-3); font-size: 12.5px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    footer button { border: 0; background: none; color: var(--blue); font: inherit; cursor: pointer; padding: 0; }
+    .login { max-width: 380px; margin: 60px auto 0; text-align: center; }
+    .login h2 { justify-content: center; font-size: 22px; }
+    .login p { color: var(--text-2); font-size: 14px; margin: 0 0 16px; }
+    .login input { width: 100%; height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; font-size: 16px; padding: 0 14px; outline: none; }
+    .login input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--bar-2); }
+    .login button { width: 100%; height: 46px; margin-top: 10px; border: 0; border-radius: 12px; background: var(--blue); color: #fff; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+    .login button:disabled { opacity: .6; }
+    .err { color: #d70015; font-size: 13.5px; min-height: 20px; margin-top: 10px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 720px) {
+      .wrap { padding: 0 16px 36px; }
+      h1 { font-size: 28px; }
+      .titlebar { align-items: flex-start; flex-direction: column; }
+      .seg { width: 100%; } .seg button { flex: 1; padding: 7px 8px; }
+      .kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+      .kpi .num { font-size: 28px; }
+      .card { padding: 14px 16px; border-radius: 18px; }
+      .grid { grid-template-columns: 1fr; gap: 10px; }
+      .chart svg { height: 150px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="back" href="/iphone18/">‹ Stock page</a>
+      <div class="titlebar">
+        <div><h1>Visitors</h1><div class="sub">mohdbash.com/iphone18 · Kuwait time</div></div>
+        <nav class="seg" id="range" aria-label="Period" hidden>
+          <button type="button" data-days="1">Today</button>
+          <button type="button" data-days="7" aria-pressed="true">7 days</button>
+          <button type="button" data-days="30">30 days</button>
+        </nav>
+      </div>
+    </header>
+
+    <form class="card login" id="login" hidden>
+      <h2>Private dashboard</h2>
+      <p>Enter your dashboard password.</p>
+      <input type="password" id="pw" autocomplete="current-password" aria-label="Password" required>
+      <button type="submit" id="go">Open</button>
+      <div class="err" id="err" role="alert"></div>
+    </form>
+
+    <main id="dash" hidden>
+      <section class="kpis">
+        <div class="card kpi"><div class="lbl">Visitors</div><div class="num" id="k-visitors">–</div><div class="note" id="k-visitors-note"></div></div>
+        <div class="card kpi"><div class="lbl">Page views</div><div class="num" id="k-views">–</div><div class="note" id="k-views-note"></div></div>
+        <div class="card kpi live"><div class="lbl"><span class="dot"></span>On the page now</div><div class="num" id="k-live">–</div><div class="note">last 5 minutes</div></div>
+        <div class="card kpi"><div class="lbl">Refresh presses</div><div class="num" id="k-refresh">–</div><div class="note" id="k-refresh-note"></div></div>
+      </section>
+
+      <section class="card chart">
+        <h2>Visitors per day <span class="legend"><span><i style="background:var(--bar)"></i>Visitors</span><span><i style="background:var(--bar-2)"></i>Page views</span></span></h2>
+        <svg id="chart" preserveAspectRatio="none" role="img" aria-label="Visitors per day"></svg>
+        <div class="axis"><span id="ax-from"></span><span id="ax-to"></span></div>
+      </section>
+
+      <section class="grid">
+        <div class="card"><h2>Countries <small>visitors</small></h2><ul class="list" id="l-countries"></ul></div>
+        <div class="card"><h2>Devices <small>visitors</small></h2><ul class="list" id="l-devices"></ul></div>
+        <div class="card"><h2>Came from <small>visits</small></h2><ul class="list" id="l-sources"></ul></div>
+        <div class="card"><h2>Tabs viewed</h2><ul class="list" id="l-tabs"></ul></div>
+        <div class="card"><h2>Shops picked in Filter</h2><ul class="list" id="l-filters"></ul></div>
+        <div class="card"><h2>Shops tapped <small>went to the shop</small></h2><ul class="list" id="l-clicks"></ul></div>
+      </section>
+
+      <footer>
+        <span id="foot"></span>
+        <span>This device is not counted · <button type="button" id="logout">Log out</button></span>
+      </footer>
+    </main>
+  </div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} }, del(k) { try { localStorage.removeItem(k); } catch {} } };
+  const KEY = 'iphone18-dash';
+  let password = store.get(KEY) || '';
+  let days = 7, timer = null, shopNames = {};
+  const fmt = (n) => Number(n || 0).toLocaleString('en-US');
+  const dayLabel = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const regionNames = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }); } catch { return null; } })();
+  const flag = (cc) => /^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65)) : '';
+  const country = (cc) => cc === 'XX' || cc === 'T1' ? 'Unknown' : `${flag(cc)} ${(regionNames && regionNames.of(cc)) || cc}`;
+  const TAB = { official: 'Official Resellers', others: 'Others' };
+
+  function list(el, rows, label) {
+    el.innerHTML = '';
+    if (!rows.length) { el.innerHTML = '<li class="empty">Nothing yet</li>'; return; }
+    const max = Math.max(...rows.map((r) => r.n));
+    for (const r of rows) {
+      const li = document.createElement('li');
+      const k = document.createElement('span'); k.className = 'k'; k.textContent = label(r.k); k.title = k.textContent;
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = fmt(r.n);
+      const b = document.createElement('span'); b.className = 'b'; const bar = document.createElement('span'); bar.style.width = `${Math.max(3, (r.n / max) * 100)}%`; b.appendChild(bar);
+      li.append(k, n, b); el.appendChild(li);
+    }
+  }
+
+  function chart(data) {
+    const svg = $('#chart');
+    const byDay = Object.fromEntries(data.series.map((r) => [r.day, r]));
+    const daysList = [];
+    for (let t = Date.parse(data.chartFrom + 'T12:00:00Z'); ; t += 86400e3) { const d = new Date(t).toISOString().slice(0, 10); daysList.push(d); if (d >= data.todayDay) break; if (daysList.length > 120) break; }
+    const W = 1000, H = 200, pad = 4, n = daysList.length, slot = W / n, bw = Math.max(2, slot * 0.62);
+    const max = Math.max(1, ...daysList.map((d) => (byDay[d]?.views || 0)), ...daysList.map((d) => (byDay[d]?.visitors || 0)));
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    let out = '';
+    daysList.forEach((d, i) => {
+      const r = byDay[d] || { visitors: 0, views: 0 };
+      const x = i * slot + (slot - bw) / 2;
+      const hv = ((r.views || 0) / max) * (H - pad), hu = ((r.visitors || 0) / max) * (H - pad);
+      out += `<g><title>${dayLabel(d)}: ${fmt(r.visitors)} visitors, ${fmt(r.views)} page views</title>`;
+      out += `<rect x="${x}" y="${H - hv}" width="${bw}" height="${Math.max(hv, 0)}" rx="${Math.min(6, bw / 3)}" fill="var(--bar-2)"/>`;
+      out += `<rect x="${x}" y="${H - hu}" width="${bw}" height="${Math.max(hu, r.visitors ? 2 : 0)}" rx="${Math.min(6, bw / 3)}" fill="var(--bar)"/></g>`;
+    });
+    out += `<line x1="0" y1="${H - .5}" x2="${W}" y2="${H - .5}" stroke="var(--line)" stroke-width="1"/>`;
+    svg.innerHTML = out;
+    $('#ax-from').textContent = dayLabel(daysList[0]);
+    $('#ax-to').textContent = 'Today';
+  }
+
+  function render(d) {
+    const isToday = d.days === 1;
+    const period = isToday ? 'today' : `last ${d.days} days`;
+    $('#k-visitors').textContent = fmt(d.range.visitors);
+    $('#k-visitors-note').textContent = isToday ? 'today' : `${period} · ${fmt(d.today.visitors)} today`;
+    $('#k-views').textContent = fmt(d.range.views);
+    $('#k-views-note').textContent = isToday ? 'today' : `${period} · ${fmt(d.today.views)} today`;
+    $('#k-live').textContent = fmt(d.liveNow);
+    $('#k-refresh').textContent = fmt(d.range.refresh);
+    $('#k-refresh-note').textContent = period;
+    chart(d);
+    list($('#l-countries'), d.countries, country);
+    list($('#l-devices'), d.devices, (k) => k || 'Unknown');
+    list($('#l-sources'), d.sources, (k) => k || 'Direct');
+    list($('#l-tabs'), d.tabs, (k) => TAB[k] || k);
+    list($('#l-filters'), d.filters, (k) => shopNames[k] || k);
+    list($('#l-clicks'), d.clicks, (k) => shopNames[k] || k);
+    const since = d.countingSince ? new Date(d.countingSince).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kuwait' }) : 'now';
+    $('#foot').textContent = `Counting since ${since}. A person who comes back on another day counts again. Updated ${new Date(d.generatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuwait' })}.`;
+  }
+
+  function showLogin(msg) {
+    clearInterval(timer); $('#dash').hidden = true; $('#range').hidden = true; $('#login').hidden = false;
+    $('#err').textContent = msg || ''; setTimeout(() => $('#pw').focus(), 50);
+  }
+
+  async function load() {
+    const res = await fetch(`/api/stats?days=${days}`, { headers: { authorization: `Bearer ${password}` }, cache: 'no-store' });
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 401) { store.del(KEY); password = ''; return showLogin('That password is not right.'); }
+    if (!res.ok) return showLogin(body.error || `Could not load (${res.status})`);
+    store.set(KEY, password); store.set('iphone18-notrack', '1'); // the owner's own visits are not counted
+    $('#login').hidden = true; $('#dash').hidden = false; $('#range').hidden = false;
+    await namesReady;
+    render(body);
+    clearInterval(timer); timer = setInterval(() => { if (!document.hidden) load().catch(() => {}); }, 60000);
+  }
+
+  const namesReady = fetch('/api/stock', { cache: 'no-store' }).then((r) => r.json()).then((b) => {
+    for (const s of (b.stock || b).sites || []) shopNames[s.id] = s.name;
+  }).catch(() => {});
+
+  $('#login').addEventListener('submit', async (e) => {
+    e.preventDefault(); password = $('#pw').value; $('#go').disabled = true; $('#err').textContent = '';
+    try { await load(); } catch (err) { showLogin(`Could not connect: ${err.message}`); }
+    $('#go').disabled = false;
+  });
+  for (const b of document.querySelectorAll('#range button')) b.addEventListener('click', () => {
+    days = Number(b.dataset.days);
+    for (const x of document.querySelectorAll('#range button')) x.setAttribute('aria-pressed', String(x === b));
+    load().catch(() => {});
+  });
+  $('#logout').addEventListener('click', () => { store.del(KEY); password = ''; showLogin(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && password && !$('#dash').hidden) load().catch(() => {}); });
+
+  if (password) load().catch((err) => showLogin(`Could not connect: ${err.message}`)); else showLogin();
+})();
+</script>
+</body>
+</html>

@@ -156,6 +156,9 @@
     const sites = stock.sites.filter((s) => (s.group || 'official') === group && (!f.retailer || s.id === f.retailer));
     const cheapestMap = stock.summary.cheapestByGroup?.[group] || (others ? {} : stock.summary.cheapest) || {};
     const today = kuwaitToday();
+    // Others tab: official price per variant (Gait / Xcite list the same Apple Kuwait price) shown under the capacity for comparison.
+    const officialPrice = {};
+    if (others) for (const s of stock.sites) if (s.id === 'gait' || s.id === 'xcite') for (const r of s.results) if (r.priceKWD != null && (r.status !== 'NOT_LISTED' || r.note)) officialPrice[r.key] = Math.min(officialPrice[r.key] ?? Infinity, r.priceKWD);
     const sections = $('#sections'); sections.innerHTML = ''; $('#shop-top').innerHTML = '';
 
     for (const m of stock.models) {
@@ -214,7 +217,12 @@
           }
           if (f.instock && !rowIn) continue;
           if (f.retailer && (!rowSites.length || rowSites.every(({ r }) => r.status === 'NOT_LISTED'))) continue; // chosen shop doesn't list it
-          const row = el('div', 'row'); row.appendChild(el('span', 'cap', cap)); row.appendChild(chips); card.appendChild(row); rows++;
+          const capEl = el('span', 'cap', cap);
+          if (others && officialPrice[key] != null) {
+            const op = el('span', 'offp'); op.appendChild(el('span', null, 'Official')); op.appendChild(document.createTextNode(kwdShort(officialPrice[key])));
+            capEl.title = `Official price (Gait / Xcite): ${kwd(officialPrice[key])}`; capEl.appendChild(op);
+          }
+          const row = el('div', 'row'); row.appendChild(capEl); row.appendChild(chips); card.appendChild(row); rows++;
         }
         if (!rows) continue;
         n.textContent = others ? `${cardIn} offer${cardIn === 1 ? '' : 's'} in stock` : `${cardIn}/${cardCells} in stock`;

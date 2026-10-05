@@ -28,3 +28,11 @@ test('alert rule modes', async () => {
   assert.equal(restockTransitions(changes, 'any-in-stock').length, 3);
   assert.equal(restockTransitions(changes, 'restock').length, 1);
 });
+
+test('pre-order guard: nothing is in stock before the pre-order date', async () => {
+  const { preorderGuard } = await import('../src/sites/base.js');
+  const duo = { id: 'iphone-duo', preorderOpens: '2026-10-16' };
+  assert.equal(preorderGuard(duo, { status: 'IN_STOCK' }, '2026-10-05').status, 'OUT_OF_STOCK');
+  assert.equal(preorderGuard(duo, { status: 'IN_STOCK' }, '2026-10-16').status, 'IN_STOCK');
+  assert.equal(preorderGuard(duo, { status: 'NOT_LISTED' }, '2026-10-05').status, 'NOT_LISTED');
+});

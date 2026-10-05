@@ -12,6 +12,29 @@ export const soooq = makeShopifyAdapter({ id: 'soooq', name: 'Soooq', base: 'htt
 export const webstore = makeShopifyAdapter({ id: 'webstore', name: 'Web Store', base: 'https://webstoreshops.com', collections: ['*'] });
 export const store990 = makeShopifyAdapter({ id: 'store990', name: '990 Store', base: 'https://990store.com', collections: ['apple'] });
 
+// Added 2026-10-05 (all answered plain requests; robots.txt allows these feeds). Jarir left out: DataDome bot
+// protection and /api/ disallowed in its robots.txt.
+export const zayoom = makeShopifyAdapter({ id: 'zayoom', name: 'Zayoom', base: 'https://zayoom.com', collections: ['iphone'] });
+export const telefonati = makeShopifyAdapter({ id: 'telefonati', name: 'Telefonati', base: 'https://www.telefonati.com', collections: ['apple', 'iphone-18-series', 'iphone-18-pro-max'] });
+export const blink = makeShopifyAdapter({ id: 'blink', name: 'Blink', base: 'https://www.blink.com.kw', collections: ['*', 'apple'] });
+
+// Trikart: Magento 2 with open GraphQL (robots.txt: Allow /). Simple products, one per colour+capacity.
+class Trikart extends CatalogAdapter {
+  constructor() { super({ id: 'trikart', name: 'Trikart', baseUrl: 'https://www.trikart.com', group: 'others' }); }
+  async fetchListings() {
+    const query = '{ products(search:"iphone 18", pageSize:100){ items { name url_key stock_status price_range{ minimum_price{ final_price{ value } } } } } }';
+    const res = await fetchPolite('https://www.trikart.com/graphql', { method: 'POST', expect: 'json', headers: { 'content-type': 'application/json', store: 'kwt_en' }, body: JSON.stringify({ query }) });
+    if (res.body.errors?.length) throw new Error('GraphQL error: ' + res.body.errors.map((e) => e.message).join('; '));
+    const out = [];
+    for (const p of res.body.data?.products?.items || []) {
+      if (!/iphone\s*18|iphone\s*duo/i.test(p.name)) continue;
+      out.push({ title: p.name, status: p.stock_status === 'IN_STOCK' ? STATUS.IN_STOCK : STATUS.OUT_OF_STOCK, price: p.price_range?.minimum_price?.final_price?.value, url: `https://www.trikart.com/kwt_en/${p.url_key}.html` });
+    }
+    return { listings: out, source: 'magento-graphql' };
+  }
+}
+export const trikart = new Trikart();
+
 // Eureka: catalogue search runs on Algolia with a public search-only key embedded in their pages.
 class Eureka extends CatalogAdapter {
   constructor() { super({ id: 'eureka', name: 'Eureka', baseUrl: 'https://www.eureka.com.kw', group: 'others' }); }

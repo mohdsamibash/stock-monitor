@@ -5,6 +5,7 @@
 import { STATUS, variantKey } from '../../config/variants.js';
 import { classifyListing, parsePriceKWD, detectRegion } from '../normalize.js';
 import { logger } from '../lib/log.js';
+import { kuwaitDate } from '../lib/time.js';
 
 export { STATUS };
 
@@ -89,6 +90,16 @@ export class CatalogAdapter {
 
   async checkModel(model) {
     if (!this.discovered) await this.discover();
-    return fillMatrix(model, this.found).map(({ modelId, ...r }) => r);
+    return fillMatrix(model, this.found).map(({ modelId, ...r }) => preorderGuard(model, r));
   }
+}
+
+/**
+ * Nothing can be bought before a model's pre-order date. Some shops (e.g. Telefonati's iPhone Duo page,
+ * verified 2026-10-05) mark a "COMING SOON" product as available in their feed; this turns that into
+ * OUT_OF_STOCK with a "Coming soon" note instead of a false "In stock".
+ */
+export function preorderGuard(model, row, today = kuwaitDate()) {
+  if (row.status !== STATUS.IN_STOCK || !model.preorderOpens || today >= model.preorderOpens) return row;
+  return { ...row, status: STATUS.OUT_OF_STOCK, note: 'Coming soon', reason: `Shop marks it available, but pre-orders only open ${model.preorderOpens}` };
 }

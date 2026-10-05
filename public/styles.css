@@ -55,7 +55,7 @@ html[data-theme="dark"] .groups { background: #2c2c2e; }
 html[data-theme="dark"] .groups-thumb { background: #48484a; box-shadow: 0 2px 8px rgba(0,0,0,.45); }
 .groups button { flex: 1 1 0; border: 0; background: transparent; color: #86868b; font: inherit; font-weight: 600; font-size: 15px; letter-spacing: -.01em; padding: 10px 18px; border-radius: 999px; cursor: pointer; transition: color .3s ease; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
 .groups button:hover { color: var(--text-2); }
-.groups button[aria-pressed="true"] { color: var(--blue); }
+.groups button[aria-pressed="true"] { color: var(--text); }
 html[data-theme="dark"] .groups button[aria-pressed="true"] { color: #fff; }
 .groups button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .groups-thumb { transition: none; } }

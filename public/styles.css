@@ -47,6 +47,20 @@ a { color: inherit; }
 .btn.primary:disabled { opacity: .5; cursor: progress; transform: none; }
 .btn.icon { width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 html[data-theme="dark"] .btn.icon .moon, html:not([data-theme="dark"]) .btn.icon .sun { display: none; }
+/* Official resellers | Others switch */
+.groups { display: flex; gap: 4px; margin-top: 12px; padding: 3px; background: var(--chip); border-radius: 12px; max-width: 420px; }
+.groups button { flex: 1 1 0; border: 0; background: transparent; color: var(--text-2); font: inherit; font-weight: 600; font-size: 14px; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background var(--ease), color var(--ease), box-shadow var(--ease); }
+.groups button[aria-pressed="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+html[data-theme="dark"] .groups button[aria-pressed="true"] { background: #3a3a3c; }
+@keyframes groupIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.group-in { animation: groupIn .35s cubic-bezier(.22,1,.36,1) both; }
+/* Others: region tag, quantity, empty row */
+.tag { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: .03em; line-height: 15px; vertical-align: 1px; background: var(--chip); color: var(--text-2); box-shadow: inset 0 0 0 1px var(--line); }
+.tag-ME { color: #0a7d32; } .tag-JP { color: #b4232c; } .tag-US { color: #1d4ed8; }
+html[data-theme="dark"] .tag-ME { color: #4ade80; } html[data-theme="dark"] .tag-JP { color: #f87171; } html[data-theme="dark"] .tag-US { color: #93c5fd; }
+.qty { font-weight: 600; }
+.none-here { grid-column: 1 / -1; font-size: 12.5px; color: var(--text-3); padding: 10px 2px; }
+
 /* model pills + Filters button */
 .row3 { display: flex; align-items: center; gap: 8px; margin: 12px 0 10px; }
 .tabs { display: flex; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; padding: 2px; background: var(--chip); border-radius: 999px; }
@@ -109,12 +123,12 @@ html[data-theme="dark"] .btn.icon .moon, html:not([data-theme="dark"]) .btn.icon
 }
 .chip[href] { cursor: pointer; } .chip[href]:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
 .chip .top { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; min-width: 0; }
-.chip .r { display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; white-space: nowrap; flex: 0 0 auto; }
+.chip .r { display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
 .chip .r::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); flex: 0 0 auto; }
 .chip .s { font-size: 11px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .chip.IN_STOCK .s { color: var(--green); font-weight: 600; }
 @container (max-width: 640px) { .chips { grid-template-columns: repeat(2, 1fr); } .chip { padding: 7px 10px; } .chip .r { font-size: 13px; } .chip .s { font-size: 11.5px; } .chip .p { font-size: 12px; } }
-.chip .p { font-size: 11.5px; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.chip .p { font-size: 11.5px; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; flex: 0 0 auto; }
 .chip.IN_STOCK { background: var(--chip-in); } .chip.IN_STOCK .r::before { background: var(--green); box-shadow: 0 0 0 3px rgba(52,199,89,.18); }
 .chip.OUT_OF_STOCK { background: var(--chip-out); } .chip.OUT_OF_STOCK .r::before { background: var(--red); }
 .chip.NOT_LISTED { opacity: .45; } .chip.NOT_LISTED .r::before { background: var(--text-3); }
@@ -153,6 +167,8 @@ html[data-theme="dark"] .toast { background: rgba(245,245,247,.94); color: #1d1d
 /* ---------- mobile ---------- */
 @media (max-width: 720px) {
   .topbar { padding: 8px 12px 0; }
+  .groups { max-width: none; margin-top: 10px; }
+  .groups button { font-size: 13.5px; padding: 8px 6px; }
   .row3 { margin: 10px 0 8px; }
   .tab { font-size: 13px; padding: 7px 13px; }
     .instock { font-size: 13px; gap: 6px; padding: 6px 0; }

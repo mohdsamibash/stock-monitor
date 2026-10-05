@@ -2,7 +2,7 @@
   const $ = (s) => document.querySelector(s);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const STATUS_LABEL = { IN_STOCK: 'In stock', OUT_OF_STOCK: 'Out of stock', NOT_LISTED: 'Not listed', ERROR: 'Error' };
-  const state = { stock: null, status: null, history: null, filters: { retailer: '', model: '', color: '', capacity: '', instock: false } };
+  const state = { stock: null, status: null, history: null, group: location.hash === '#others' ? 'others' : 'official', filters: { retailer: '', model: '', color: '', capacity: '', instock: false } };
 
   // ---------- theme ----------
   const root = document.documentElement;
@@ -71,6 +71,13 @@
     requestAnimationFrame(() => { ink.dataset.ready = '1'; ink.style.transition = ''; });
   }
   window.addEventListener('resize', () => moveInk(false));
+  for (const b of document.querySelectorAll('#groups button')) b.addEventListener('click', () => {
+    if (state.group === b.dataset.group) return;
+    state.group = b.dataset.group; history.replaceState(null, '', state.group === 'others' ? '#others' : location.pathname + location.search);
+    const sec = $('#sections'); sec.classList.remove('group-in'); void sec.offsetWidth; sec.classList.add('group-in');
+    render();
+  });
+  window.addEventListener('hashchange', () => { const g = location.hash === '#others' ? 'others' : 'official'; if (g !== state.group) { state.group = g; render(); } });
   $('#instock-toggle').addEventListener('change', (e) => { state.filters.instock = e.target.checked; populateFilters(state.stock); render(); });
 
   function setUpdated(stock) {
@@ -85,10 +92,14 @@
     const stock = state.stock; if (!stock) return;
     const f = state.filters;
     $('#empty').hidden = true;
-    $('#counter-num').textContent = stock.summary.inStock;
-    $('#counter-label').textContent = `of ${stock.summary.total} in stock`;
+    const group = state.group, others = group === 'others';
+    const G = stock.summary.byGroup?.[group] || { inStock: stock.summary.inStock, total: stock.summary.total, variantsInStock: 0 };
+    $('#counter-num').textContent = others ? G.variantsInStock : G.inStock;
+    $('#counter-label').textContent = others ? `of ${stock.summary.variants} variants in stock` : `of ${G.total} in stock`;
+    for (const b of document.querySelectorAll('#groups button')) b.setAttribute('aria-pressed', String(b.dataset.group === group));
     setUpdated(stock);
-    const sites = stock.sites.filter((s) => !f.retailer || s.id === f.retailer);
+    const sites = stock.sites.filter((s) => (s.group || 'official') === group && (!f.retailer || s.id === f.retailer));
+    const cheapestMap = stock.summary.cheapestByGroup?.[group] || (others ? {} : stock.summary.cheapest) || {};
     const today = kuwaitToday();
     const sections = $('#sections'); sections.innerHTML = '';
 
@@ -102,7 +113,8 @@
       else head.appendChild(el('span', 'sub', `Release ${fmtDate(m.releaseDate)}`));
       const modelKeys = new Set(m.colors.flatMap((c) => m.capacities.map((cap) => `${m.id}|${c.name}|${cap}`)));
       let inStock = 0, cells = 0;
-      for (const s of sites) { if (s.linkOnly) continue; for (const r of s.results) if (modelKeys.has(r.key)) { cells++; if (r.status === 'IN_STOCK') inStock++; } }
+      if (others) { cells = modelKeys.size; for (const k of modelKeys) if (sites.some((s) => s.results.find((r) => r.key === k)?.status === 'IN_STOCK')) inStock++; }
+      else for (const s of sites) { if (s.linkOnly) continue; for (const r of s.results) if (modelKeys.has(r.key)) { cells++; if (r.status === 'IN_STOCK') inStock++; } }
       const stat = el('span', 'stat'); stat.innerHTML = `<b>${inStock}</b> of ${cells} in stock`; head.appendChild(stat);
       sec.appendChild(head);
       const grid = el('div', 'grid');
@@ -120,25 +132,35 @@
           const key = `${m.id}|${c.name}|${cap}`;
           const chips = el('div', 'chips');
           let rowIn = 0;
-          for (const s of sites) {
-            const r = s.results.find((x) => x.key === key) || { status: 'ERROR' };
+          // Official: one chip per reseller, always. Others: only shops that list this variant, in stock first, cheapest first.
+          let rowSites = sites.map((s) => ({ s, r: s.results.find((x) => x.key === key) || { status: 'ERROR' } }));
+          if (others) {
+            rowSites = rowSites.filter(({ r }) => r.status === 'IN_STOCK' || r.status === 'OUT_OF_STOCK')
+              .filter(({ r }) => !f.instock || r.status === 'IN_STOCK')
+              .sort((x, y) => (x.r.status === 'IN_STOCK' ? 0 : 1) - (y.r.status === 'IN_STOCK' ? 0 : 1) || (x.r.priceKWD ?? 1e9) - (y.r.priceKWD ?? 1e9));
+            if (!rowSites.length && !f.instock) chips.appendChild(el('span', 'none-here', 'Not listed at these shops'));
+          }
+          for (const { s, r } of rowSites) {
             if (!s.linkOnly) { cardCells++; if (r.status === 'IN_STOCK') { rowIn++; cardIn++; } }
             const chip = el(r.url ? 'a' : 'span', s.linkOnly ? 'chip LINK' : `chip ${r.status}`);
             if (r.url) { chip.href = r.url; chip.target = '_blank'; chip.rel = 'noopener'; }
-            const best = stock.summary.cheapest?.[key]; if (best && best.siteId === s.id && r.status === 'IN_STOCK') chip.classList.add('best');
+            const best = cheapestMap[key]; if (best && best.siteId === s.id && r.status === 'IN_STOCK') chip.classList.add('best');
             chip.title = s.linkOnly ? `${s.name}: opens this exact variant on their site (no automatic status)` : `${s.name}: ${STATUS_LABEL[r.status]}${r.note ? ` (${r.note})` : ''}${r.reason ? `\n${r.reason}` : ''}${r.priceKWD != null ? ` · ${kwd(r.priceKWD)}` : ''}${r.title ? `\n${r.title}` : ''}${r.error ? `\n${r.error}` : ''}${s.checkedAt ? `\nChecked ${relative(s.checkedAt)}` : ''}`;
             const top = el('span', 'top');
             top.appendChild(el('span', 'r', s.name));
             if (r.priceKWD != null && (r.status !== 'NOT_LISTED' || r.note)) top.appendChild(el('span', 'p', kwdShort(r.priceKWD)));
             chip.appendChild(top);
-            chip.appendChild(el('span', 's', s.linkOnly ? 'Check site ↗' : (r.note || STATUS_LABEL[r.status])));
+            const lowQty = others && r.status === 'IN_STOCK' && r.qty && r.qty <= 5;
+            const sub = el('span', 's', s.linkOnly ? 'Check site ↗' : lowQty ? `Only ${r.qty} left` : (r.note || STATUS_LABEL[r.status]));
+            if (others && r.region) { const t = el('span', `tag tag-${r.region}`, r.region); t.title = { ME: 'Middle East version', JP: 'Japanese version (camera shutter sound always on)', US: 'US version (eSIM only)', HK: 'Hong Kong version' }[r.region] || r.region; sub.appendChild(t); }
+            chip.appendChild(sub);
             chips.appendChild(chip);
           }
           if (f.instock && !rowIn) continue;
           const row = el('div', 'row'); row.appendChild(el('span', 'cap', cap)); row.appendChild(chips); card.appendChild(row); rows++;
         }
         if (!rows) continue;
-        n.textContent = `${cardIn}/${cardCells} in stock`;
+        n.textContent = others ? `${cardIn} offer${cardIn === 1 ? '' : 's'} in stock` : `${cardIn}/${cardCells} in stock`;
         grid.appendChild(card); cards++;
       }
       if (!cards) continue;
@@ -176,7 +198,8 @@
     const wrap = $('#changes'); wrap.innerHTML = ''; wrap.appendChild(el('h2', null, 'Recent changes (24 h)'));
     const ul = el('ul');
     const REAL = new Set(['IN_STOCK', 'OUT_OF_STOCK']);
-    const changes = (state.history?.changes || []).filter((c) => REAL.has(c.from) && REAL.has(c.to)).slice(-40).reverse();
+    const groupOf = Object.fromEntries((state.stock?.sites || []).map((s) => [s.id, s.group || 'official']));
+    const changes = (state.history?.changes || []).filter((c) => REAL.has(c.from) && REAL.has(c.to) && (groupOf[c.siteId] || 'official') === state.group).slice(-40).reverse();
     if (!changes.length) ul.appendChild(el('li', 'none', 'No In stock / Out of stock flips in the last 24 hours.'));
     const names = Object.fromEntries((state.stock?.retailers || []).map((r) => [r.id, r.name]));
     const models = Object.fromEntries((state.stock?.models || []).map((m) => [m.id, m.name]));

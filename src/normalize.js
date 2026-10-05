@@ -1,5 +1,5 @@
 // Text normalisation + alias matching. Pure functions, no I/O.
-import { MODEL_ALIASES, COLOR_ALIASES, CAPACITY_ALIASES, EXCLUDE_KEYWORDS, PHONE_HINTS } from '../config/aliases.js';
+import { MODEL_ALIASES, COLOR_ALIASES, CAPACITY_ALIASES, ACCESSORY_KEYWORDS, GREY_KEYWORDS, PHONE_HINTS, REGION_PATTERNS } from '../config/aliases.js';
 import { MODELS } from '../config/variants.js';
 
 const ARABIC_DIGITS = { '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
@@ -69,9 +69,17 @@ export function matchColor(text, modelId) {
   return best?.color ?? null;
 }
 
-export function isExcluded(text) {
+export function isExcluded(text, { allowGrey = false } = {}) {
   const t = normalizeText(text);
-  return EXCLUDE_KEYWORDS.some((k) => containsAlias(t, k));
+  if (ACCESSORY_KEYWORDS.some((k) => containsAlias(t, k))) return true;
+  return !allowGrey && GREY_KEYWORDS.some((k) => containsAlias(t, k));
+}
+
+// 'JP' | 'US' | 'HK' | 'ME' | null. Only what the listing states; never inferred.
+export function detectRegion(text) {
+  const t = normalizeText(text);
+  for (const [tag, words] of REGION_PATTERNS) if (words.some((w) => containsAlias(t, w))) return tag;
+  return null;
 }
 
 export function looksLikePhone(text) {
@@ -81,9 +89,9 @@ export function looksLikePhone(text) {
 
 // Convenience: classify one listing title (+ optional structured hints) into a variant.
 // Returns null when any dimension cannot be resolved -> caller reports NOT_LISTED, never guesses.
-export function classifyListing({ title, colorHint, capacityHint, modelHint }) {
+export function classifyListing({ title, colorHint, capacityHint, modelHint, allowGrey = false }) {
   const text = [title, colorHint, capacityHint, modelHint].filter(Boolean).join(' | ');
-  if (!looksLikePhone(text) || isExcluded(title)) return null;
+  if (!looksLikePhone(text) || isExcluded(title, { allowGrey })) return null;
   const modelId = (modelHint && matchModel(modelHint)) || matchModel(title) || matchModel(text);
   if (!modelId) return null;
   const capacity = (capacityHint && matchCapacity(capacityHint)) || matchCapacity(title) || matchCapacity(text);

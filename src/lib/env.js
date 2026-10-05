@@ -9,6 +9,8 @@ export const ENV = {
   TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || '',
   ALERT_CHANNELS: process.env.ALERT_CHANNELS || "auto",
+  // which tabs can trigger phone alerts: official, others, or both (comma separated)
+  ALERT_GROUPS: process.env.ALERT_GROUPS || 'official',
   ALERT_ON: (process.env.ALERT_ON || "any-in-stock").toLowerCase(),
   ALERT_CONFIRM_PASSES: num(process.env.ALERT_CONFIRM_PASSES, 1),
   NTFY_TOPIC: process.env.NTFY_TOPIC || "",

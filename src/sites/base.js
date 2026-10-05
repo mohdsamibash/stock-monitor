@@ -3,7 +3,7 @@
 // discover() performs the (few) network requests for a pass and caches the parsed listings;
 // checkModel() is pure filtering over that cache so no extra requests are made per model/variant.
 import { STATUS, variantKey } from '../../config/variants.js';
-import { classifyListing, parsePriceKWD } from '../normalize.js';
+import { classifyListing, parsePriceKWD, detectRegion } from '../normalize.js';
 import { logger } from '../lib/log.js';
 
 export { STATUS };
@@ -27,6 +27,8 @@ export function fillMatrix(model, found, checkedAt = new Date().toISOString()) {
         title: hit?.title ?? null,
         note: hit?.note ?? null,
         reason: hit?.reason ?? null,
+        region: hit?.region ?? null,
+        qty: hit?.qty ?? null,
         checkedAt,
       });
     }
@@ -48,11 +50,11 @@ export function errorMatrix(model, message, checkedAt = new Date().toISOString()
  * Classify a raw listing and add it to `found` (keyed by variant). When two listings resolve to
  * the same variant, IN_STOCK wins, then the lower price.
  */
-export function addListing(found, { title, colorHint, capacityHint, modelHint, status, price, url, note, reason }, log) {
-  const cls = classifyListing({ title, colorHint, capacityHint, modelHint });
+export function addListing(found, { title, colorHint, capacityHint, modelHint, status, price, url, note, reason, region, qty }, log, { allowGrey = false } = {}) {
+  const cls = classifyListing({ title, colorHint, capacityHint, modelHint, allowGrey });
   if (!cls) { log?.debug(`unresolved listing: ${title}`); return null; }
   const key = variantKey(cls.modelId, cls.color, cls.capacity);
-  const entry = { status, priceKWD: parsePriceKWD(price), url, title, note: note || null, reason: reason || null, ...cls };
+  const entry = { status, priceKWD: parsePriceKWD(price), url, title, note: note || null, reason: reason || null, region: allowGrey ? (region ?? detectRegion(title)) : null, qty: qty ?? null, ...cls };
   const prev = found.get(key);
   if (!prev) found.set(key, entry);
   else {
@@ -66,8 +68,9 @@ export function makeLogger(id) { return logger(`site:${id}`); }
 
 /** Generic "listing catalogue" adapter: subclasses implement fetchListings() -> raw listings[] */
 export class CatalogAdapter {
-  constructor({ id, name, baseUrl }) {
+  constructor({ id, name, baseUrl, group = 'official' }) {
     this.id = id; this.name = name; this.baseUrl = baseUrl;
+    this.group = group; // 'official' resellers or 'others' (grey imports allowed, region tagged)
     this.log = makeLogger(id);
     this.found = new Map();
     this.discovered = null; // { listings, source, at }
@@ -78,7 +81,7 @@ export class CatalogAdapter {
     this.found = new Map();
     const { listings, source } = await this.fetchListings();
     let resolved = 0;
-    for (const l of listings) if (addListing(this.found, l, this.log)) resolved++;
+    for (const l of listings) if (addListing(this.found, l, this.log, { allowGrey: this.group === 'others' })) resolved++;
     this.discovered = { listings: listings.length, resolved, source, at: new Date().toISOString() };
     this.log.info(`discover: ${listings.length} listings, ${resolved} resolved to variants (${source})`);
     return this.discovered;

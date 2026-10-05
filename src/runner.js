@@ -31,8 +31,10 @@ export function runPass(opts = {}) {
 async function doPass({ profile = { profile: 'manual', intervalMinutes: null, reason: 'one-off' }, trigger = 'cli' } = {}) {
   const started = Date.now();
   const state = loadState();
-  if (!state.lastSnapshot) {
-    // Fresh machine (e.g. GitHub Actions without a cache hit): diff against what the website last showed.
+  const stale = state.lastRunAt && Date.now() - new Date(state.lastRunAt).getTime() > 2 * 3600e3;
+  if (!state.lastSnapshot || stale) {
+    // Fresh machine (GitHub Actions without a cache hit) or a stale local snapshot (e.g. a Mac that has not run
+    // for days): diff against what the website last showed, so old state never produces fake 'back in stock' alerts.
     const prev = await fetchPublishedBundle();
     if (prev?.stock) { state.lastSnapshot = snapshotOf(prev.stock); state.carryChanges = prev.history?.changes || []; log.info('seeded last snapshot from the published bundle'); }
   }
@@ -44,7 +46,7 @@ async function doPass({ profile = { profile: 'manual', intervalMinutes: null, re
     const checkedAt = new Date().toISOString();
     if (bo?.until && new Date(bo.until).getTime() > Date.now()) {
       log.warn(`${site.id}: in back-off until ${bo.until} (${bo.lastError}); skipping`);
-      sites.push({ id: site.id, name: site.name, baseUrl: site.baseUrl, status: 'backoff', error: `Backing off until ${bo.until}: ${bo.lastError}`, checkedAt, results: MODELS.flatMap((m) => errorMatrix(m, 'back-off', checkedAt)) });
+      sites.push({ id: site.id, name: site.name, baseUrl: site.baseUrl, group: site.group || 'official', status: 'backoff', error: `Backing off until ${bo.until}: ${bo.lastError}`, checkedAt, results: MODELS.flatMap((m) => errorMatrix(m, 'back-off', checkedAt)) });
       continue;
     }
     const before = passRequestCount();
@@ -57,7 +59,7 @@ async function doPass({ profile = { profile: 'manual', intervalMinutes: null, re
       }
       state.backoff[site.id] = { level: 0 };
       state.consecutiveErrors[site.id] = 0;
-      sites.push({ id: site.id, name: site.name, baseUrl: site.baseUrl, linkOnly: Boolean(site.linkOnly), status: 'ok', source: disc.source, listings: disc.listings, resolved: disc.resolved, requests: passRequestCount() - before, checkedAt, results });
+      sites.push({ id: site.id, name: site.name, baseUrl: site.baseUrl, group: site.group || 'official', linkOnly: Boolean(site.linkOnly), status: 'ok', source: disc.source, listings: disc.listings, resolved: disc.resolved, requests: passRequestCount() - before, checkedAt, results });
     } catch (e) {
       const blocked = Boolean(e.blocked);
       state.consecutiveErrors[site.id] = (state.consecutiveErrors[site.id] || 0) + 1;
@@ -69,7 +71,7 @@ async function doPass({ profile = { profile: 'manual', intervalMinutes: null, re
         msg += ` — backing off (level ${level}) until ${until}`;
       }
       log.error(`${site.id}: ${msg}`);
-      sites.push({ id: site.id, name: site.name, baseUrl: site.baseUrl, status: 'error', error: msg, blocked, requests: passRequestCount() - before, checkedAt, results: MODELS.flatMap((m) => errorMatrix(m, e.message, checkedAt)) });
+      sites.push({ id: site.id, name: site.name, baseUrl: site.baseUrl, group: site.group || 'official', status: 'error', error: msg, blocked, requests: passRequestCount() - before, checkedAt, results: MODELS.flatMap((m) => errorMatrix(m, e.message, checkedAt)) });
     }
   }
 
@@ -79,7 +81,7 @@ async function doPass({ profile = { profile: 'manual', intervalMinutes: null, re
     profile,
     pass: { durationMs: Date.now() - started, requests: passRequestCount(), requestsPerHour: requestsPerHour() },
     models: MODELS,
-    retailers: SITES.map((s) => ({ id: s.id, name: s.name, baseUrl: s.baseUrl, linkOnly: Boolean(s.linkOnly) })),
+    retailers: SITES.map((s) => ({ id: s.id, name: s.name, baseUrl: s.baseUrl, group: s.group || 'official', linkOnly: Boolean(s.linkOnly) })),
     sites,
     summary: summarize(sites),
     changes: [],
@@ -100,7 +102,9 @@ async function doPass({ profile = { profile: 'manual', intervalMinutes: null, re
 
   log.info(`pass done: ${stock.summary.inStock}/${stock.summary.total} in stock, ${changes.length} changes, ${stock.pass.requests} requests, ${stock.pass.durationMs} ms`);
 
-  const restocks = confirmTransitions(restockTransitions(changes, ENV.ALERT_ON), state, snapshot);
+  const alertGroups = new Set(ENV.ALERT_GROUPS.split(',').map((g) => g.trim()).filter(Boolean));
+  const groupOf = Object.fromEntries(stock.sites.map((s) => [s.id, s.group]));
+  const restocks = confirmTransitions(restockTransitions(changes, ENV.ALERT_ON).filter((c) => alertGroups.has(groupOf[c.siteId])), state, snapshot);
   if (restocks.length) {
     log.info(`${restocks.length} restock transition(s): ${restocks.map((c) => `${c.siteId} ${c.key}`).join('; ')}`);
     try {
@@ -137,29 +141,32 @@ export function confirmTransitions(transitions, state, snapshot) {
 }
 
 export function summarize(sites) {
-  const byRetailer = {};
-  let inStock = 0, total = 0;
+  const byRetailer = {}; const byGroup = {}; const cheapest = {}; const cheapestByGroup = {};
   for (const s of sites) {
     if (s.linkOnly) continue; // link-only retailers carry no status and are not counted
+    const g = s.group || 'official';
+    const G = (byGroup[g] ||= { inStock: 0, total: 0, variantsInStock: 0, shops: 0 }); G.shops++;
     const c = { inStock: 0, outOfStock: 0, notListed: 0, error: 0 };
     for (const r of s.results) {
-      total++;
-      if (r.status === STATUS.IN_STOCK) { c.inStock++; inStock++; }
+      G.total++;
+      if (r.status === STATUS.IN_STOCK) { c.inStock++; G.inStock++; }
       else if (r.status === STATUS.OUT_OF_STOCK) c.outOfStock++;
       else if (r.status === STATUS.NOT_LISTED) c.notListed++;
       else c.error++;
     }
     byRetailer[s.id] = c;
   }
-  // cheapest in-stock retailer per variant
-  const cheapest = {};
   for (const v of allVariants()) {
-    let best = null;
-    for (const s of sites) {
-      const r = s.results.find((x) => x.key === v.key);
-      if (r?.status === STATUS.IN_STOCK && r.priceKWD != null && (!best || r.priceKWD < best.priceKWD)) best = { siteId: s.id, priceKWD: r.priceKWD };
+    for (const g of Object.keys(byGroup)) {
+      let best = null;
+      for (const s of sites) {
+        if (s.linkOnly || (s.group || 'official') !== g) continue;
+        const r = s.results.find((x) => x.key === v.key);
+        if (r?.status === STATUS.IN_STOCK && r.priceKWD != null && (!best || r.priceKWD < best.priceKWD)) best = { siteId: s.id, priceKWD: r.priceKWD };
+      }
+      if (best) { (cheapestByGroup[g] ||= {})[v.key] = best; byGroup[g].variantsInStock++; if (g === 'official') cheapest[v.key] = best; }
     }
-    if (best) cheapest[v.key] = best;
   }
-  return { inStock, total, variants: allVariants().length, byRetailer, cheapest };
+  const off = byGroup.official || { inStock: 0, total: 0 };
+  return { inStock: off.inStock, total: off.total, variants: allVariants().length, byRetailer, byGroup, cheapest, cheapestByGroup };
 }

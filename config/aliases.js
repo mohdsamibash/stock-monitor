@@ -41,13 +41,30 @@ export const CAPACITY_ALIASES = {
   '2TB': ['2tb', '2 tb', '2t', '2048gb', '2048 gb', '2000gb', '2 تيرا', '2تيرا', '2 تيرابايت', '٢ تيرا'],
 };
 
-// Listings containing any of these are ignored: accessories and grey-import variants.
-export const EXCLUDE_KEYWORDS = [
+// Listings containing any of these are ignored everywhere: accessories, bundles, used devices.
+export const ACCESSORY_KEYWORDS = [
   'case', 'cover', 'protector', 'screen', 'lens', 'bundle', 'cable', 'charger', 'adapter',
-  'wallet', 'stand', 'holder', 'strap', 'skin', 'glass', 'magsafe', 'bumper', 'sleeve',
-  'japanese', 'japan', 'jp version', 'american', 'us version', 'usa version', 'hk version', 'hong kong',
-  'refurbished', 'renewed', 'used', 'pre-owned', 'preowned', 'esim only',
-  'جراب', 'غطاء', 'حماية', 'واقي', 'كفر', 'شاحن', 'كيبل', 'كابل', 'مستعمل', 'ياباني', 'امريكي', 'أمريكي',
+  'wallet', 'stand', 'holder', 'strap', 'skin', 'glass', 'magsafe', 'bumper', 'sleeve', 'grip',
+  'refurbished', 'renewed', 'used', 'pre-owned', 'preowned',
+  'جراب', 'غطاء', 'حماية', 'واقي', 'كفر', 'شاحن', 'كيبل', 'كابل', 'مستعمل',
+];
+
+// Grey-import / regional versions. Ignored for OFFICIAL resellers (they sell the Middle East version);
+// accepted for the OTHERS tab, where the version is shown as a tag instead.
+export const GREY_KEYWORDS = [
+  'japanese', 'japan', 'jp version', 'american', 'us version', 'usa version', 'hk version', 'hong kong', 'esim only',
+  'ياباني', 'امريكي', 'أمريكي',
+];
+
+// Kept for backwards compatibility (official = both lists).
+export const EXCLUDE_KEYWORDS = [...ACCESSORY_KEYWORDS, ...GREY_KEYWORDS];
+
+// Region tags shown on OTHERS chips. First match wins; when nothing matches the tag is left empty (never guessed).
+export const REGION_PATTERNS = [
+  ['JP', ['japanese', 'japan', 'jp version', 'jp vr', 'ياباني']],
+  ['US', ['american', 'us version', 'usa version', 'us vr', 'united states', 'امريكي', 'أمريكي']],
+  ['HK', ['hong kong', 'hk version']],
+  ['ME', ['middle east', 'me version', 'arabic version', 'الشرق الأوسط']],
 ];
 
 // Listings must contain at least one of these to count as a phone (defence in depth against

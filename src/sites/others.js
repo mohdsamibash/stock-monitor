@@ -5,7 +5,7 @@ import { fetchPolite } from '../lib/http.js';
 import { CatalogAdapter, STATUS } from './base.js';
 import { makeShopifyAdapter } from './shopify.js';
 
-export const mobile2000 = makeShopifyAdapter({ id: 'mobile2000', name: 'Mobile 2000', base: 'https://mobile2000.com', collections: ['iphone-18-series'] });
+export const mobile2000 = makeShopifyAdapter({ id: 'mobile2000', name: 'Mob2000', base: 'https://mobile2000.com', collections: ['iphone-18-series'] });
 export const wibi = makeShopifyAdapter({ id: 'wibi', name: 'Wibi', base: 'https://wibi.com.kw', collections: ['apple-iphone-18-series'] });
 export const soooq = makeShopifyAdapter({ id: 'soooq', name: 'Soooq', base: 'https://soooq.com', collections: ['iphone-18-series'] });
 // Web Store sells new grey imports and used phones; 'used'/'refurbished' listings are rejected by the matcher.

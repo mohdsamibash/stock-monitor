@@ -138,8 +138,10 @@
     $('#empty').hidden = true;
     const group = state.group, others = group === 'others';
     const G = stock.summary.byGroup?.[group] || { inStock: stock.summary.inStock, total: stock.summary.total, variantsInStock: 0 };
-    const shopSite = f.retailer ? stock.sites.find((s) => s.id === f.retailer && (s.group || 'official') === group) : null;
-    if (f.retailer && !shopSite) f.retailer = ''; // shop not in this tab
+    // Shop picker is only on Others (Official has just three resellers).
+    const shopSite = others && f.retailer ? stock.sites.find((s) => s.id === f.retailer && s.group === 'others') : null;
+    if (f.retailer && !shopSite) { f.retailer = ''; syncHash(); } // shop not in this tab
+    if (!others) closeShops();
     if (shopSite) {
       $('#counter-num').textContent = shopSite.results.filter((r) => r.status === 'IN_STOCK').length;
       $('#counter-label').textContent = `of ${stock.summary.variants} in stock at ${shopSite.name}`;
@@ -162,7 +164,7 @@
       const sec = el('section', 'model' + (coming ? ' coming' : ''));
       const head = el('div', 'model-head');
       const titleLine = el('div', 'title-line'); titleLine.appendChild(el('h2', null, m.name)); head.appendChild(titleLine);
-      if (!sections.children.length) { sec.classList.add('shop-host'); titleLine.appendChild(shopWrap); }
+      if (others && !sections.children.length) { sec.classList.add('shop-host'); titleLine.appendChild(shopWrap); }
       if (coming) head.appendChild(el('span', 'soon', `Coming soon — pre-order opens ${fmtDate(m.preorderOpens)}`));
       else head.appendChild(el('span', 'sub', `Release ${fmtDate(m.releaseDate)}`));
       const modelKeys = new Set(m.colors.flatMap((c) => m.capacities.map((cap) => `${m.id}|${c.name}|${cap}`)));
@@ -222,8 +224,10 @@
       sec.appendChild(grid); sections.appendChild(sec);
     }
     if (!sections.children.length) { // no model shown: keep the picker reachable above the message
-      const head = el('div', 'model-head shop-only'); const tl = el('div', 'title-line'); tl.appendChild(shopWrap); head.appendChild(tl);
-      $('#shop-top').appendChild(head);
+      if (others) {
+        const head = el('div', 'model-head shop-only'); const tl = el('div', 'title-line'); tl.appendChild(shopWrap); head.appendChild(tl);
+        $('#shop-top').appendChild(head);
+      }
       $('#empty').hidden = false; $('#empty').textContent = f.instock ? (f.retailer ? 'Nothing is in stock at this shop right now.' : 'Nothing is in stock right now. You will be the first to know.') : (f.retailer ? 'This shop does not list any iPhone 18 yet.' : 'Nothing matches these filters.'); }
     if (state.animateDir) {
       const dir = state.animateDir; state.animateDir = 0;

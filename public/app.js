@@ -96,7 +96,7 @@
   // The picker is one node that render() places in the first model heading (it survives sections being rebuilt).
   const shopWrap = $('#shop-wrap'); const sq = (s) => shopWrap.querySelector(s);
   function renderShopButton(stock, shopSite) {
-    sq('#shop-label').textContent = shopSite ? shopSite.name : 'All shops';
+    sq('#shop-label').textContent = shopSite ? shopSite.name : 'Filter';
     sq('#shop-btn').classList.toggle('active', Boolean(shopSite));
     sq('#shop-clear').hidden = !shopSite;
     if (!sq('#shop-pop').hidden) renderShopList(stock);

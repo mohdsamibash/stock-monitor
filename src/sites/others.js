@@ -69,7 +69,7 @@ class Chips extends CatalogAdapter {
 // Talabat Mart: the public iPhone category page embeds its product list (with stockAmount) as JSON.
 // Stock is for the branch the website serves by default (Hawally).
 class TalabatMart extends CatalogAdapter {
-  constructor() { super({ id: 'talabat', name: 'Talabat Mart', baseUrl: 'https://www.talabat.com', group: 'others' }); }
+  constructor() { super({ id: 'talabat', name: 'Talabat', baseUrl: 'https://www.talabat.com', group: 'others' }); }
   async fetchListings() {
     const res = await fetchPolite('https://www.talabat.com/kuwait/talabat-mart/apple/iphone');
     const m = res.text.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);

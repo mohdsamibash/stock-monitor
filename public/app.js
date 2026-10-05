@@ -71,6 +71,15 @@
     requestAnimationFrame(() => { ink.dataset.ready = '1'; ink.style.transition = ''; });
   }
   window.addEventListener('resize', () => moveInk(false));
+  // Segmented control: the white thumb slides to the selected option.
+  function moveGroupThumb() {
+    const thumb = document.querySelector('.groups-thumb'); const active = document.querySelector('#groups button[aria-pressed="true"]');
+    if (!thumb || !active) return;
+    if (!thumb.dataset.ready) thumb.style.transition = 'none';
+    thumb.style.width = `${active.offsetWidth}px`; thumb.style.transform = `translateX(${active.offsetLeft}px)`;
+    requestAnimationFrame(() => { thumb.dataset.ready = '1'; thumb.style.transition = ''; });
+  }
+  window.addEventListener('resize', moveGroupThumb);
   for (const b of document.querySelectorAll('#groups button')) b.addEventListener('click', () => {
     if (state.group === b.dataset.group) return;
     state.group = b.dataset.group; history.replaceState(null, '', state.group === 'others' ? '#others' : location.pathname + location.search);
@@ -97,6 +106,7 @@
     $('#counter-num').textContent = others ? G.variantsInStock : G.inStock;
     $('#counter-label').textContent = others ? `of ${stock.summary.variants} variants in stock` : `of ${G.total} in stock`;
     for (const b of document.querySelectorAll('#groups button')) b.setAttribute('aria-pressed', String(b.dataset.group === group));
+    moveGroupThumb();
     setUpdated(stock);
     const sites = stock.sites.filter((s) => (s.group || 'official') === group && (!f.retailer || s.id === f.retailer));
     const cheapestMap = stock.summary.cheapestByGroup?.[group] || (others ? {} : stock.summary.cheapest) || {};

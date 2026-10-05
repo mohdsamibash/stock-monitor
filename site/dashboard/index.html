@@ -34,7 +34,11 @@
     .pages li:hover .k { color: var(--blue); }
     .pages .n small { font-weight: 500; color: var(--text-3); margin-left: 6px; }
     .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; }
-    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 12px; }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0 12px; }
+    .kpis.sub { grid-template-columns: repeat(2, 1fr); margin-top: 0; }
+    .explain { margin: -4px 4px 12px; font-size: 12px; color: var(--text-3); line-height: 1.5; }
+    .kpi .short { display: none; }
+    .explain b { color: var(--text-2); font-weight: 600; }
     .kpi .lbl { font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 6px; }
     .kpi .num { font-size: 34px; font-weight: 700; letter-spacing: -.03em; margin-top: 4px; font-variant-numeric: tabular-nums; }
     .kpi .note { font-size: 12px; color: var(--text-3); }
@@ -49,7 +53,8 @@
     .bars { display: flex; gap: 6px; height: 190px; padding-top: 20px; border-bottom: 1px solid var(--line); }
     .bars .col { position: relative; flex: 1; min-width: 0; }
     .bars i { position: absolute; left: 12%; right: 12%; bottom: 0; border-radius: 6px 6px 2px 2px; animation: rise .6s cubic-bezier(.25,.1,.25,1); transform-origin: bottom; }
-    .bars .pv { background: var(--bar-2); } .bars .uv { background: var(--bar); }
+    .bars .uv { background: var(--bar); }
+    .seg.small { padding: 3px; } .seg.small button { font-size: 12.5px; padding: 5px 11px; }
     .bars .v { position: absolute; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; line-height: 1; }
     .bars .v.zero { color: var(--text-3); font-weight: 500; }
     .bars.dense { gap: 2px; } .bars.dense i { left: 6%; right: 6%; border-radius: 3px 3px 1px 1px; }
@@ -87,8 +92,15 @@
       h1 { font-size: 28px; }
       .controls { flex-direction: column; gap: 8px; margin-top: 12px; }
       .seg { width: 100%; } .seg button { flex: 1; padding: 7px 8px; }
-      .kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+      .kpis { gap: 8px; margin-top: 14px; } .kpis.sub { margin-top: 0; }
+      .kpis:not(.sub) .kpi { padding: 12px 12px; }
+      .kpis:not(.sub) .kpi .lbl { font-size: 12px; white-space: nowrap; }
+      .kpi .long { display: none; } .kpi .short { display: inline; }
+      .kpis:not(.sub) .kpi .num { font-size: 24px; }
+      .kpis:not(.sub) .kpi .note { font-size: 11px; }
       .kpi .num { font-size: 28px; }
+      .chart h2 { flex-direction: column; align-items: stretch; gap: 10px; }
+      .chart .seg.small { width: 100%; }
       .card { padding: 14px 16px; border-radius: 18px; }
       .grid { grid-template-columns: 1fr; gap: 10px; }
       .bars { height: 160px; gap: 4px; }
@@ -127,23 +139,32 @@
 
     <main id="dash" hidden>
       <section class="kpis">
-        <div class="card kpi"><div class="lbl">Visitors</div><div class="num" id="k-visitors">–</div><div class="note" id="k-visitors-note"></div></div>
-        <div class="card kpi"><div class="lbl">Page views</div><div class="num" id="k-views">–</div><div class="note" id="k-views-note"></div></div>
+        <div class="card kpi" title="Different people. Someone who comes 3 times in one day counts once."><div class="lbl"><span class="long">Unique visitors</span><span class="short">Unique</span></div><div class="num" id="k-visitors">–</div><div class="note" id="k-visitors-note"></div></div>
+        <div class="card kpi" title="Separate visits. A visit ends after 30 minutes without activity, so morning + lunch = 2 visits."><div class="lbl">Visits</div><div class="num" id="k-visits">–</div><div class="note" id="k-visits-note"></div></div>
+        <div class="card kpi" title="Every time a page was opened or reloaded."><div class="lbl">Page views</div><div class="num" id="k-views">–</div><div class="note" id="k-views-note"></div></div>
+      </section>
+      <p class="explain"><b>Unique visitors</b> = different people · <b>Visits</b> = separate visits (a visit ends after 30 min idle) · <b>Page views</b> = every page opened</p>
+      <section class="kpis sub">
         <div class="card kpi live"><div class="lbl"><span class="dot"></span><span id="k-live-lbl">On the site now</span></div><div class="num" id="k-live">–</div><div class="note">last 5 minutes</div></div>
         <div class="card kpi"><div class="lbl" id="k-4-lbl">Refresh presses</div><div class="num" id="k-4">–</div><div class="note" id="k-4-note"></div></div>
       </section>
 
-      <section class="card" style="margin-bottom:12px"><h2>Pages <small id="pages-note">visitors · page views</small></h2><ul class="list pages" id="l-pages"></ul></section>
+      <section class="card" style="margin-bottom:12px"><h2>Pages <small id="pages-note">unique visitors</small></h2><ul class="list pages" id="l-pages"></ul></section>
 
       <section class="card chart">
-        <h2>Visitors per day <span class="legend"><span><i style="background:var(--bar)"></i>Visitors</span><span><i style="background:var(--bar-2)"></i>Page views</span></span></h2>
+        <h2><span id="chart-title">Unique visitors per day</span>
+          <nav class="seg small" id="metric" aria-label="Chart shows">
+            <button type="button" data-metric="visitors" aria-pressed="true">Unique</button>
+            <button type="button" data-metric="visits">Visits</button>
+            <button type="button" data-metric="views">Page views</button>
+          </nav></h2>
         <div class="bars" id="chart" role="img" aria-label="Visitors per day"></div>
         <div class="axis"><span id="ax-from"></span><span id="ax-to"></span></div>
       </section>
 
       <section class="grid">
-        <div class="card"><h2>Countries <small>visitors</small></h2><ul class="list" id="l-countries"></ul></div>
-        <div class="card"><h2>Devices <small>visitors</small></h2><ul class="list" id="l-devices"></ul></div>
+        <div class="card"><h2>Countries <small>unique visitors</small></h2><ul class="list" id="l-countries"></ul></div>
+        <div class="card"><h2>Devices <small>unique visitors</small></h2><ul class="list" id="l-devices"></ul></div>
         <div class="card"><h2>Came from <small>visits</small></h2><ul class="list" id="l-sources"></ul></div>
         <div class="card stock-only"><h2>Tabs viewed <small>stock page</small></h2><ul class="list" id="l-tabs"></ul></div>
         <div class="card stock-only"><h2>Shops picked in Filter</h2><ul class="list" id="l-filters"></ul></div>
@@ -163,7 +184,8 @@
   const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} }, del(k) { try { localStorage.removeItem(k); } catch {} } };
   const KEY = 'site-dash';
   let password = store.get(KEY) || store.get('iphone18-dash') || ''; // older key from /iphone18/dashboard
-  let days = Number(store.get('dash-days')) || 7, page = store.get('dash-page') || 'all', timer = null, shopNames = {};
+  let days = Number(store.get('dash-days')) || 7, page = store.get('dash-page') || 'all', metric = store.get('dash-metric') || 'visitors', timer = null, shopNames = {}, last = null;
+  const METRIC = { visitors: ['unique visitors', 'Unique visitors per day'], visits: ['visits', 'Visits per day'], views: ['page views', 'Page views per day'] };
   const PAGE_NAME = { home: 'Home (mohdbash.com)', iphone18: 'Stock page (/iphone18)' };
   const fmt = (n) => Number(n || 0).toLocaleString('en-US');
   const dayLabel = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -190,19 +212,20 @@
     const byDay = Object.fromEntries(data.series.map((r) => [r.day, r]));
     const daysList = [];
     for (let t = Date.parse(data.chartFrom + 'T12:00:00Z'); ; t += 86400e3) { const d = new Date(t).toISOString().slice(0, 10); daysList.push(d); if (d >= data.todayDay) break; if (daysList.length > 120) break; }
-    const max = Math.max(1, ...daysList.map((d) => Math.max(byDay[d]?.views || 0, byDay[d]?.visitors || 0)));
+    const val = (d) => byDay[d]?.[metric] || 0;
+    const max = Math.max(1, ...daysList.map(val));
+    $('#chart-title').textContent = METRIC[metric][1];
+    box.setAttribute('aria-label', METRIC[metric][1]);
     box.classList.toggle('dense', daysList.length > 14);
     box.innerHTML = '';
     for (const d of daysList) {
-      const r = byDay[d] || { visitors: 0, views: 0 };
-      const pv = ((r.views || 0) / max) * 100, uv = ((r.visitors || 0) / max) * 100;
+      const r = byDay[d] || {}; const n = val(d), h = (n / max) * 100;
       const col = document.createElement('div'); col.className = 'col' + (d === data.todayDay ? ' today' : '');
-      col.title = `${dayLabel(d)}: ${fmt(r.visitors)} visitors, ${fmt(r.views)} page views`;
-      col.innerHTML = '<i class="pv"></i><i class="uv"></i><span class="v"></span>';
-      col.querySelector('.pv').style.height = `${pv}%`;
-      col.querySelector('.uv').style.height = r.visitors ? `max(${uv}%, 2px)` : '0';
-      const v = col.querySelector('.v'); v.textContent = fmt(r.visitors); v.style.bottom = `calc(${Math.max(pv, uv)}% + 4px)`;
-      if (!r.visitors) v.classList.add('zero');
+      col.title = `${dayLabel(d)}: ${fmt(r.visitors)} unique visitors, ${fmt(r.visits)} visits, ${fmt(r.views)} page views`;
+      col.innerHTML = '<i class="uv"></i><span class="v"></span>';
+      col.querySelector('.uv').style.height = n ? `max(${h}%, 2px)` : '0';
+      const v = col.querySelector('.v'); v.textContent = fmt(n); v.style.bottom = `calc(${h}% + 4px)`;
+      if (!n) v.classList.add('zero');
       box.appendChild(col);
     }
     $('#ax-from').textContent = dayLabel(daysList[0]);
@@ -210,19 +233,23 @@
   }
 
   function render(d) {
+    last = d;
     const isToday = d.days === 1;
     const period = isToday ? 'today' : `last ${d.days} days`;
     $('#k-visitors').textContent = fmt(d.range.visitors);
-    $('#k-visitors-note').textContent = isToday ? 'today' : `${period} · ${fmt(d.today.visitors)} today`;
+    const todayNote = (n) => (isToday ? 'today' : `${fmt(n)} today`); // the range is already shown by the switch above
+    $('#k-visitors-note').textContent = todayNote(d.today.visitors);
+    $('#k-visits').textContent = fmt(d.range.visits);
+    $('#k-visits-note').textContent = todayNote(d.today.visits);
     $('#k-views').textContent = fmt(d.range.views);
-    $('#k-views-note').textContent = isToday ? 'today' : `${period} · ${fmt(d.today.views)} today`;
+    $('#k-views-note').textContent = todayNote(d.today.views);
     $('#k-live').textContent = fmt(d.liveNow);
     $('#k-live-lbl').textContent = d.page === 'all' ? 'On the site now' : 'On the page now';
     const stock = d.page !== 'home';
     for (const el of document.querySelectorAll('.stock-only')) el.hidden = !stock;
     // 4th number: Refresh presses for the stock page; pages per visitor for Home.
-    $('#k-4-lbl').textContent = stock ? 'Refresh presses' : 'Views per visitor';
-    $('#k-4').textContent = stock ? fmt(d.range.refresh) : (d.range.visitors ? (d.range.views / d.range.visitors).toFixed(1) : '0');
+    $('#k-4-lbl').textContent = stock ? 'Refresh presses' : 'Visits per visitor';
+    $('#k-4').textContent = stock ? fmt(d.range.refresh) : (d.range.visitors ? (d.range.visits / d.range.visitors).toFixed(1) : '0');
     $('#k-4-note').textContent = stock ? `${period}${d.page === 'all' ? ' · stock page' : ''}` : period;
     // Pages card: always both pages; tap a row to switch to it.
     const pl = $('#l-pages'); pl.innerHTML = '';
@@ -232,12 +259,12 @@
       const li = document.createElement('li'); li.title = `Show only ${PAGE_NAME[r.k]}`;
       li.innerHTML = `<span class="k"></span><span class="n"></span><span class="b"><span></span></span>`;
       li.querySelector('.k').textContent = PAGE_NAME[r.k] + (d.page === r.k ? '  ✓' : '');
-      li.querySelector('.n').innerHTML = `${fmt(r.visitors)}<small>${fmt(r.views)} views</small>`;
+      li.querySelector('.n').innerHTML = `${fmt(r.visitors)}<small>${fmt(r.visits)} visits · ${fmt(r.views)} views</small>`;
       li.querySelector('.b span').style.width = `${r.visitors ? Math.max(3, (r.visitors / maxP) * 100) : 0}%`;
       li.addEventListener('click', () => setPage(d.page === r.k ? 'all' : r.k));
       pl.appendChild(li);
     }
-    $('#pages-note').textContent = `${period} · visitors · views`;
+    $('#pages-note').textContent = `${period} · unique visitors`;
     chart(d);
     list($('#l-countries'), d.countries, country);
     list($('#l-devices'), d.devices, (k) => k || 'Unknown');
@@ -246,7 +273,7 @@
     list($('#l-filters'), d.filters, (k) => shopNames[k] || k);
     list($('#l-clicks'), d.clicks, (k) => shopNames[k] || k);
     const since = d.countingSince ? new Date(d.countingSince).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kuwait' }) : 'now';
-    $('#foot').textContent = `Counting since ${since}. A person who comes back on another day counts again. Updated ${new Date(d.generatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuwait' })}.`;
+    $('#foot').textContent = `Counting since ${since}. A visit ends after 30 minutes without activity; a person who comes back on another day counts again as a unique visitor. Updated ${new Date(d.generatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuwait' })}.`;
   }
 
   function showLogin(msg) {
@@ -282,7 +309,10 @@
     load().catch(() => {});
   });
   for (const b of document.querySelectorAll('#pagesel button')) b.addEventListener('click', () => setPage(b.dataset.page));
-  press('#range', 'days', days); press('#pagesel', 'page', page);
+  for (const b of document.querySelectorAll('#metric button')) b.addEventListener('click', () => {
+    metric = b.dataset.metric; store.set('dash-metric', metric); press('#metric', 'metric', metric); if (last) chart(last);
+  });
+  press('#range', 'days', days); press('#pagesel', 'page', page); press('#metric', 'metric', metric);
   $('#logout').addEventListener('click', () => { store.del(KEY); password = ''; showLogin(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && password && !$('#dash').hidden) load().catch(() => {}); });
 

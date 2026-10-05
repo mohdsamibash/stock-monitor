@@ -24,21 +24,11 @@
           <button class="btn primary" id="refresh">Refresh</button>
         </div>
       </div>
-      <div class="row-groups">
-        <nav class="groups" id="groups" aria-label="Shop type">
-          <span class="groups-thumb" aria-hidden="true"></span>
-          <button type="button" data-group="official" aria-pressed="true">Official Resellers</button>
-          <button type="button" data-group="others" aria-pressed="false">Others</button>
-        </nav>
-        <div class="shopwrap">
-          <button type="button" class="shopbtn" id="shop-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose a shop">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/></svg>
-            <span class="lbl" id="shop-label">All shops</span><span class="chev" aria-hidden="true">▾</span>
-          </button>
-          <button type="button" class="shopclear" id="shop-clear" aria-label="Show all shops" hidden>✕</button>
-          <div class="shoppop" id="shop-pop" role="listbox" aria-label="Shops" hidden></div>
-        </div>
-      </div>
+      <nav class="groups" id="groups" aria-label="Shop type">
+        <span class="groups-thumb" aria-hidden="true"></span>
+        <button type="button" data-group="official" aria-pressed="true">Official Resellers</button>
+        <button type="button" data-group="others" aria-pressed="false">Others</button>
+      </nav>
       <div class="row2">
         <div class="counter" id="counter"><span class="counter-num" id="counter-num">–</span><span class="counter-label" id="counter-label">in stock</span></div>
         <span class="updated" id="updated">loading…</span>
@@ -52,8 +42,18 @@
 
   <main id="app" class="container">
     <div class="stale" id="stale" hidden>⚠ The monitor has not reported for a while. Data below may be outdated.</div>
+    <div id="shop-top"></div>
     <div class="empty" id="empty">Loading stock data…</div>
     <div id="sections"></div>
+    <div id="shop-home" hidden>
+        <div class="shopwrap" id="shop-wrap">
+          <button type="button" class="shopbtn" id="shop-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose a shop">
+            <span class="lbl" id="shop-label">All shops</span><span class="chev" aria-hidden="true">▾</span>
+          </button>
+          <button type="button" class="shopclear" id="shop-clear" aria-label="Show all shops" hidden>✕</button>
+          <div class="shoppop" id="shop-pop" role="listbox" aria-label="Shops" hidden></div>
+        </div>
+    </div>
     <section class="changes" id="changes"></section>
   </main>
 

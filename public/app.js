@@ -93,14 +93,16 @@
     if (location.hash !== want) history.replaceState(null, '', want || location.pathname + location.search);
   }
   // ---------- shop picker ----------
+  // The picker is one node that render() places in the first model heading (it survives sections being rebuilt).
+  const shopWrap = $('#shop-wrap'); const sq = (s) => shopWrap.querySelector(s);
   function renderShopButton(stock, shopSite) {
-    $('#shop-label').textContent = shopSite ? shopSite.name : (matchMedia('(max-width: 720px)').matches ? 'Shops' : 'All shops');
-    $('#shop-btn').classList.toggle('active', Boolean(shopSite));
-    $('#shop-clear').hidden = !shopSite;
-    if (!$('#shop-pop').hidden) renderShopList(stock);
+    sq('#shop-label').textContent = shopSite ? shopSite.name : 'All shops';
+    sq('#shop-btn').classList.toggle('active', Boolean(shopSite));
+    sq('#shop-clear').hidden = !shopSite;
+    if (!sq('#shop-pop').hidden) renderShopList(stock);
   }
   function renderShopList(stock) {
-    const pop = $('#shop-pop'); pop.innerHTML = '';
+    const pop = sq('#shop-pop'); pop.innerHTML = '';
     const sites = stock.sites.filter((s) => (s.group || 'official') === state.group && !s.linkOnly)
       .map((s) => ({ s, n: s.results.filter((r) => r.status === 'IN_STOCK').length }))
       .sort((x, y) => y.n - x.n || x.s.name.localeCompare(y.s.name));
@@ -114,10 +116,10 @@
     opt('All shops', null, '');
     for (const { s, n } of sites) opt(s.name, n, s.id);
   }
-  function openShops() { renderShopList(state.stock); $('#shop-pop').hidden = false; $('#shop-btn').setAttribute('aria-expanded', 'true'); }
-  function closeShops() { $('#shop-pop').hidden = true; $('#shop-btn').setAttribute('aria-expanded', 'false'); }
-  $('#shop-btn').addEventListener('click', (e) => { e.stopPropagation(); if (!state.stock) return; $('#shop-pop').hidden ? openShops() : closeShops(); });
-  $('#shop-clear').addEventListener('click', (e) => { e.stopPropagation(); state.filters.retailer = ''; closeShops(); syncHash(); render(); });
+  function openShops() { renderShopList(state.stock); sq('#shop-pop').hidden = false; sq('#shop-btn').setAttribute('aria-expanded', 'true'); }
+  function closeShops() { sq('#shop-pop').hidden = true; sq('#shop-btn').setAttribute('aria-expanded', 'false'); }
+  sq('#shop-btn').addEventListener('click', (e) => { e.stopPropagation(); if (!state.stock) return; sq('#shop-pop').hidden ? openShops() : closeShops(); });
+  sq('#shop-clear').addEventListener('click', (e) => { e.stopPropagation(); state.filters.retailer = ''; closeShops(); syncHash(); render(); });
   document.addEventListener('click', (e) => { if (!e.target.closest('.shopwrap')) closeShops(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeShops(); });
   $('#instock-toggle').addEventListener('change', (e) => { state.filters.instock = e.target.checked; populateFilters(state.stock); render(); });
@@ -140,7 +142,7 @@
     if (f.retailer && !shopSite) f.retailer = ''; // shop not in this tab
     if (shopSite) {
       $('#counter-num').textContent = shopSite.results.filter((r) => r.status === 'IN_STOCK').length;
-      $('#counter-label').textContent = `of ${stock.summary.variants} variants in stock at ${shopSite.name}`;
+      $('#counter-label').textContent = `of ${stock.summary.variants} in stock at ${shopSite.name}`;
     } else {
       $('#counter-num').textContent = others ? G.variantsInStock : G.inStock;
       $('#counter-label').textContent = others ? `of ${stock.summary.variants} variants in stock` : `of ${G.total} in stock`;
@@ -152,14 +154,15 @@
     const sites = stock.sites.filter((s) => (s.group || 'official') === group && (!f.retailer || s.id === f.retailer));
     const cheapestMap = stock.summary.cheapestByGroup?.[group] || (others ? {} : stock.summary.cheapest) || {};
     const today = kuwaitToday();
-    const sections = $('#sections'); sections.innerHTML = '';
+    const sections = $('#sections'); sections.innerHTML = ''; $('#shop-top').innerHTML = '';
 
     for (const m of stock.models) {
       if (f.model && m.id !== f.model) continue;
       const coming = m.preorderOpens && today < m.preorderOpens;
       const sec = el('section', 'model' + (coming ? ' coming' : ''));
       const head = el('div', 'model-head');
-      head.appendChild(el('h2', null, m.name));
+      const titleLine = el('div', 'title-line'); titleLine.appendChild(el('h2', null, m.name)); head.appendChild(titleLine);
+      if (!sections.children.length) { sec.classList.add('shop-host'); titleLine.appendChild(shopWrap); }
       if (coming) head.appendChild(el('span', 'soon', `Coming soon — pre-order opens ${fmtDate(m.preorderOpens)}`));
       else head.appendChild(el('span', 'sub', `Release ${fmtDate(m.releaseDate)}`));
       const modelKeys = new Set(m.colors.flatMap((c) => m.capacities.map((cap) => `${m.id}|${c.name}|${cap}`)));
@@ -218,7 +221,10 @@
       if (!cards) continue;
       sec.appendChild(grid); sections.appendChild(sec);
     }
-    if (!sections.children.length) { $('#empty').hidden = false; $('#empty').textContent = f.instock ? (f.retailer ? 'Nothing is in stock at this shop right now.' : 'Nothing is in stock right now. You will be the first to know.') : (f.retailer ? 'This shop does not list any iPhone 18 yet.' : 'Nothing matches these filters.'); }
+    if (!sections.children.length) { // no model shown: keep the picker reachable above the message
+      const head = el('div', 'model-head shop-only'); const tl = el('div', 'title-line'); tl.appendChild(shopWrap); head.appendChild(tl);
+      $('#shop-top').appendChild(head);
+      $('#empty').hidden = false; $('#empty').textContent = f.instock ? (f.retailer ? 'Nothing is in stock at this shop right now.' : 'Nothing is in stock right now. You will be the first to know.') : (f.retailer ? 'This shop does not list any iPhone 18 yet.' : 'Nothing matches these filters.'); }
     if (state.animateDir) {
       const dir = state.animateDir; state.animateDir = 0;
       sections.classList.remove('slide-out-up', 'slide-out-down', 'slide-in-up', 'slide-in-down');

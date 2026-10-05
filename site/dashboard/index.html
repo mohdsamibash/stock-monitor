@@ -38,6 +38,18 @@
     .kpis.sub { grid-template-columns: repeat(2, 1fr); margin-top: 0; }
     .explain { margin: -4px 4px 12px; font-size: 12px; color: var(--text-3); line-height: 1.5; }
     .kpi .short { display: none; }
+    .cfcard { margin-top: 12px; }
+    .cfcard .explain { margin: -4px 0 12px; }
+    .mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .mini div { background: var(--bg); border-radius: 12px; padding: 10px 12px; }
+    .mini b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .mini span { font-size: 12px; color: var(--text-2); }
+    .bars.grey .uv { background: #8e8e93; }
+    .cf-cols { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    .cf-cols > div { min-width: 0; }
+    .cf-cols h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+    .muted { color: var(--text-3); font-size: 13.5px; }
+    @media (max-width: 720px) { .cf-cols { grid-template-columns: minmax(0, 1fr); } .mini b { font-size: 18px; } .mini div { padding: 9px 10px; } }
     .explain b { color: var(--text-2); font-weight: 600; }
     .kpi .lbl { font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 6px; }
     .kpi .num { font-size: 34px; font-weight: 700; letter-spacing: -.03em; margin-top: 4px; font-variant-numeric: tabular-nums; }
@@ -62,7 +74,7 @@
     .bars.dense .v.zero { display: none; }
     @keyframes rise { from { transform: scaleY(0); } }
     @media (prefers-reduced-motion: reduce) { .bars i { animation: none; } }
-    .chart .axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
+    .axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
     .legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); }
     .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
     .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -104,7 +116,11 @@
       .card { padding: 14px 16px; border-radius: 18px; }
       .grid { grid-template-columns: 1fr; gap: 10px; }
       .bars { height: 160px; gap: 4px; }
-      .bars.dense .v { font-size: 7.5px; }
+      /* 30 bars don't fit a phone with readable numbers: swipe sideways instead (opens at today) */
+      .bars.dense { overflow-x: auto; overflow-y: hidden; gap: 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+      .bars.dense::-webkit-scrollbar { display: none; }
+      .bars.dense .col { flex: 0 0 26px; }
+      .bars.dense .v { font-size: 10px; }
     }
   </style>
 </head>
@@ -171,6 +187,12 @@
         <div class="card stock-only"><h2>Shops tapped <small>went to the shop</small></h2><ul class="list" id="l-clicks"></ul></div>
       </section>
 
+      <section class="card cfcard" id="cf">
+        <h2>Cloudflare traffic <small>last 30 days · rough</small></h2>
+        <p class="explain">Everything Cloudflare served for mohdbash.com, <b>including bots</b> and the stock page's automatic check every minute, so it runs higher than the real numbers above. It covers the days <b>before</b> your own counting started. It doesn't follow the switches at the top.</p>
+        <div id="cf-body" class="muted">Loading…</div>
+      </section>
+
       <footer>
         <span id="foot"></span>
         <span>This device is not counted · <button type="button" id="logout">Log out</button></span>
@@ -230,6 +252,7 @@
     }
     $('#ax-from').textContent = dayLabel(daysList[0]);
     $('#ax-to').textContent = 'Today';
+    box.scrollLeft = box.scrollWidth;
   }
 
   function render(d) {
@@ -291,6 +314,39 @@
     await namesReady;
     render(body);
     clearInterval(timer); timer = setInterval(() => { if (!document.hidden) load().catch(() => {}); }, 60000);
+    if (Date.now() - cfLoadedAt > 10 * 60e3) loadCf().catch((e) => { $('#cf-body').textContent = `Could not load Cloudflare numbers: ${e.message}`; });
+  }
+
+  // Cloudflare's own (rough, includes bots) numbers for the last 30 days — fetched at most every 10 minutes.
+  let cfLoadedAt = 0;
+  async function loadCf() {
+    cfLoadedAt = Date.now();
+    const res = await fetch('/api/cftraffic', { headers: { authorization: `Bearer ${password}` }, cache: 'no-store' });
+    const d = await res.json().catch(() => ({}));
+    const body = $('#cf-body');
+    if (!res.ok) { body.textContent = d.error || `Could not load (${res.status})`; return; }
+    if (!d.connected) { body.textContent = 'Not connected yet: Cloudflare needs a read-only key (see the setup steps in Claude).'; return; }
+    if (d.error) { body.textContent = d.error; return; }
+    body.className = '';
+    body.innerHTML = `<div class="mini"><div><b></b><span>unique IPs*</span></div><div><b></b><span>page loads</span></div><div><b></b><span>requests</span></div></div>
+      <div class="cf-cols"><div><h3>Page loads per day</h3><div class="bars grey dense" id="cf-chart"></div><div class="axis"><span id="cf-from"></span><span>Today</span></div></div>
+      <div><h3>Countries <span class="muted">(requests)</span></h3><ul class="list" id="cf-countries"></ul></div></div>
+      <p class="muted" style="margin:10px 0 0;font-size:12px">* summed per day, so a person on 3 days counts 3 times. Cloudflare days are UTC (3 hours behind Kuwait).</p>`;
+    const [u, pv, rq] = body.querySelectorAll('.mini b');
+    u.textContent = fmt(d.totals.uniques); pv.textContent = fmt(d.totals.pageViews); rq.textContent = fmt(d.totals.requests);
+    const box = $('#cf-chart'); const max = Math.max(1, ...d.days.map((x) => x.pageViews));
+    for (const x of d.days) {
+      const col = document.createElement('div'); col.className = 'col';
+      col.title = `${dayLabel(x.day)}: ${fmt(x.pageViews)} page loads, ${fmt(x.uniques)} unique IPs, ${fmt(x.requests)} requests`;
+      col.innerHTML = '<i class="uv"></i><span class="v"></span>';
+      const hh = (x.pageViews / max) * 100;
+      col.querySelector('.uv').style.height = x.pageViews ? `max(${hh}%, 2px)` : '0';
+      const v = col.querySelector('.v'); v.textContent = fmt(x.pageViews); v.style.bottom = `calc(${hh}% + 4px)`; if (!x.pageViews) v.classList.add('zero');
+      box.appendChild(col);
+    }
+    $('#cf-from').textContent = d.days.length ? dayLabel(d.days[0].day) : '';
+    box.scrollLeft = box.scrollWidth;
+    list($('#cf-countries'), d.countries, country);
   }
 
   const namesReady = fetch('/api/stock', { cache: 'no-store' }).then((r) => r.json()).then((b) => {

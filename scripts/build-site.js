@@ -29,7 +29,7 @@ fs.mkdirSync(DASH, { recursive: true }); fs.mkdirSync(path.join(PAGE, 'dashboard
 fs.copyFileSync(path.join(ROOT, 'site', 'dashboard', 'index.html'), path.join(DASH, 'index.html'));
 // The dashboard used to live at /iphone18/dashboard: keep that link working.
 fs.writeFileSync(path.join(PAGE, 'dashboard', 'index.html'), '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Moved</title><meta http-equiv="refresh" content="0; url=/dashboard/"><script>location.replace("/dashboard/")</script><a href="/dashboard/">The dashboard moved to /dashboard</a>\n');
-for (const f of ['track.js', 'stats.js']) fs.copyFileSync(path.join(ROOT, 'site', 'functions', 'api', f), path.join(FN, f));
+for (const f of ['track.js', 'stats.js', 'cftraffic.js']) fs.copyFileSync(path.join(ROOT, 'site', 'functions', 'api', f), path.join(FN, f));
 
 fs.writeFileSync(path.join(FN, 'stock.js'), `// Cloudflare Pages Function: /api/stock
 // GET  -> latest bundle published by the Kuwait iPhone 18 stock monitor (stored in KV)

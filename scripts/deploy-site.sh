@@ -9,7 +9,7 @@ mkdir -p "$SITE/public/iphone18/dashboard" "$SITE/public/dashboard" "$SITE/funct
 cp deploy/website/public/iphone18/{index.html,app.js,styles.css} "$SITE/public/iphone18/"
 cp deploy/website/public/iphone18/dashboard/index.html "$SITE/public/iphone18/dashboard/"   # redirect to /dashboard
 cp deploy/website/public/dashboard/index.html "$SITE/public/dashboard/"
-cp deploy/website/functions/api/{stock.js,refresh.js,track.js,stats.js} "$SITE/functions/api/"
+cp deploy/website/functions/api/{stock.js,refresh.js,track.js,stats.js,cftraffic.js} "$SITE/functions/api/"
 cd "$SITE"
 npm run build --silent
 npx wrangler pages deploy out --project-name=mohdbashweb --commit-dirty=true 2>&1 | grep -E "Deployment complete|Success|error" || true

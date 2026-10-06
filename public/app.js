@@ -102,33 +102,34 @@
   const REGION_NAME = { ME: 'Middle East version', JP: 'Japanese version (camera shutter sound always on)', US: 'US version (eSIM only)', HK: 'Hong Kong version' };
   const rankStatus = (st) => (st === 'IN_STOCK' ? 2 : st === 'OUT_OF_STOCK' ? 1 : 0);
   const byBest = (x, y) => rankStatus(y.status) - rankStatus(x.status) || (x.priceKWD ?? 1e9) - (y.priceKWD ?? 1e9);
+  // A chip is a link to the shop. With several regions it becomes a box holding that link plus a region switch
+  // row underneath; the switch sits OUTSIDE the link, so tapping it (or just missing it) never opens the shop.
   function fillChip(chip, s, r, key, offers, cheapestMap, others) {
-    chip.className = s.linkOnly ? 'chip LINK' : `chip ${r.status}`;
-    if (r.url) { chip.href = r.url; chip.target = '_blank'; chip.rel = 'noopener'; chip.dataset.site = s.id; }
+    chip.className = s.linkOnly ? 'chip LINK' : `chip ${r.status}${offers ? ' multi' : ''}`;
     const best = cheapestMap[key]; if (best && best.siteId === s.id && r.status === 'IN_STOCK' && (best.priceKWD == null || r.priceKWD === best.priceKWD)) chip.classList.add('best');
-    chip.title = s.linkOnly ? `${s.name}: opens this exact variant on their site (no automatic status)` : `${s.name}: ${STATUS_LABEL[r.status]}${r.note ? ` (${r.note})` : ''}${r.reason ? `\n${r.reason}` : ''}${r.priceKWD != null ? ` · ${kwd(r.priceKWD)}` : ''}${r.region ? `\n${REGION_NAME[r.region] || r.region}` : ''}${offers ? '\nTap a region to switch' : ''}${r.title ? `\n${r.title}` : ''}${r.error ? `\n${r.error}` : ''}${s.checkedAt ? `\nChecked ${relative(s.checkedAt)}` : ''}`;
     chip.innerHTML = '';
+    const link = offers ? el(r.url ? 'a' : 'span', 'chip-link') : chip;
+    if (r.url) { link.href = r.url; link.target = '_blank'; link.rel = 'noopener'; link.dataset.site = s.id; }
+    link.title = s.linkOnly ? `${s.name}: opens this exact variant on their site (no automatic status)` : `${s.name}: ${STATUS_LABEL[r.status]}${r.note ? ` (${r.note})` : ''}${r.reason ? `\n${r.reason}` : ''}${r.priceKWD != null ? ` · ${kwd(r.priceKWD)}` : ''}${r.region ? `\n${REGION_NAME[r.region] || r.region}` : ''}${r.title ? `\n${r.title}` : ''}${r.error ? `\n${r.error}` : ''}${s.checkedAt ? `\nChecked ${relative(s.checkedAt)}` : ''}`;
     const top = el('span', 'top');
     top.appendChild(el('span', 'r', s.name));
     if (r.priceKWD != null && (r.status !== 'NOT_LISTED' || r.note)) top.appendChild(el('span', 'p', kwdShort(r.priceKWD)));
-    chip.appendChild(top);
+    link.appendChild(top);
     const lowQty = others && r.status === 'IN_STOCK' && r.qty && r.qty <= 5;
     const sub = el('span', 's', s.linkOnly ? 'Check site ↗' : lowQty ? `Only ${r.qty} left` : (r.note || STATUS_LABEL[r.status]));
-    if (offers) {
-      const pills = el('span', 'rgs');
-      for (const o of offers) {
-        const pill = el('span', `tag tag-${o.region || 'XX'} rg${o.region === r.region ? ' on' : ''}`, o.region || '?');
-        pill.setAttribute('role', 'button'); pill.tabIndex = 0;
-        pill.setAttribute('aria-pressed', String(o.region === r.region));
-        pill.title = `${REGION_NAME[o.region] || 'Region not stated'} · ${STATUS_LABEL[o.status]}${o.priceKWD != null ? ` · ${kwd(o.priceKWD)}` : ''}`;
-        const pick = (ev) => { ev.preventDefault(); ev.stopPropagation(); if (o.region !== r.region) fillChip(chip, s, { ...r, ...o }, key, offers, cheapestMap, others); };
-        pill.addEventListener('click', pick);
-        pill.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') pick(ev); });
-        pills.appendChild(pill);
-      }
-      sub.appendChild(pills);
-    } else if (others && r.region) { const t = el('span', `tag tag-${r.region}`, r.region); t.title = REGION_NAME[r.region] || r.region; sub.appendChild(t); }
-    chip.appendChild(sub);
+    if (!offers && others && r.region) { const t = el('span', `tag tag-${r.region}`, r.region); t.title = REGION_NAME[r.region] || r.region; sub.appendChild(t); }
+    link.appendChild(sub);
+    if (!offers) return;
+    chip.appendChild(link);
+    const seg = el('div', 'rseg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', `${s.name} region`);
+    for (const o of offers) {
+      const b = el('button', `tag-${o.region || 'XX'}${o.status === 'IN_STOCK' ? '' : ' sold'}`, o.region || '?');
+      b.type = 'button'; b.setAttribute('aria-pressed', String(o.region === r.region));
+      b.title = `${REGION_NAME[o.region] || 'Region not stated'} · ${STATUS_LABEL[o.status]}${o.priceKWD != null ? ` · ${kwd(o.priceKWD)}` : ''}`;
+      b.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); if (o.region !== r.region) fillChip(chip, s, { ...r, ...o }, key, offers, cheapestMap, others); });
+      seg.appendChild(b);
+    }
+    chip.appendChild(seg);
   }
 
   // ---------- shop picker ----------
@@ -240,9 +241,9 @@
           }
           for (const { s, r } of rowSites) {
             if (!s.linkOnly) { cardCells++; if (r.status === 'IN_STOCK') { rowIn++; cardIn++; } }
-            const chip = el(r.url ? 'a' : 'span');
-            // Several regions at this shop (e.g. 990 Store ME + US): one chip, best region first, region pills switch it.
+            // Several regions at this shop (e.g. 990 Store ME + US): one chip, best region first, a switch row below.
             const offers = others && r.offers?.length > 1 ? [...r.offers].sort(byBest) : null;
+            const chip = el(offers ? 'div' : r.url ? 'a' : 'span');
             fillChip(chip, s, r, key, offers, cheapestMap, others);
             chips.appendChild(chip);
           }
@@ -404,7 +405,7 @@
 
   load();
   track('view', state.group);
-  $('#sections').addEventListener('click', (e) => { const a = e.target.closest('a.chip[data-site]'); if (a) track('click', a.dataset.site); });
+  $('#sections').addEventListener('click', (e) => { const a = e.target.closest('a[data-site]'); if (a) track('click', a.dataset.site); });
   setInterval(load, 60_000);
   setInterval(() => { if (state.stock) { setUpdated(state.stock); renderStatus(); } }, 15_000);
 })();

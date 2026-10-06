@@ -9,7 +9,7 @@ const j = async (u, o) => { const r = await fetch(u, o); let b = null; try { b =
   const s = b?.stock; const sites = s?.sites || [];
   T('A2', 'bundle has stock/status/history', Boolean(b?.stock && b?.status && b?.history));
   const off = sites.filter(x => (x.group || 'official') === 'official'), oth = sites.filter(x => x.group === 'others');
-  T('A3', 'official = Gait, Xcite, Digits; others = 13 shops', off.map(x => x.id).join(',') === 'gait,xcite,digits' && oth.length === 13, `${off.map(x => x.id)} | ${oth.map(x => x.id)}`);
+  T('A3', 'official = Gait, Xcite, Digits; others = 14 shops', off.map(x => x.id).join(',') === 'gait,xcite,digits' && oth.length === 14, `${off.map(x => x.id)} | ${oth.map(x => x.id)}`);
   T('A4', 'each retailer has 40 variant rows', sites.every(x => x.results.length === 40), sites.map(x => x.results.length).join('/'));
   const ageMin = (Date.now() - new Date(s.generatedAt)) / 60000;
   T('A5', 'data fresher than 20 min (15-min cadence + run time)', ageMin < 20, `${ageMin.toFixed(1)} min old, profile ${b.status.profile.profile}`);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyListing, matchModel, matchCapacity, matchColor, normalizeText, parsePriceKWD } from '../src/normalize.js';
+import { classifyListing, matchModel, matchCapacity, matchColor, normalizeText, parsePriceKWD, detectRegion } from '../src/normalize.js';
 
 test('normalizes arabic digits and diacritics', () => {
   assert.equal(normalizeText('آيفون ١٨ برو'), 'ايفون 18 برو');
@@ -54,4 +54,12 @@ test('grey imports: rejected for official, accepted for others', () => {
   assert.equal(classifyListing({ title: t }), null);
   assert.deepEqual(classifyListing({ title: t, allowGrey: true }), { modelId: 'iphone-18-pro-max', color: 'Burgundy', capacity: '2TB' });
   assert.equal(classifyListing({ title: 'Apple iPhone 18 Pro Max Silicone Case with MagSafe - Burgundy', allowGrey: true }), null, 'accessories always rejected');
+});
+
+test('region detection: FCC-style "Variant" titles', () => {
+  assert.equal(detectRegion('Apple iPhone 18 Pro 512GB 6.3 inch ESIM - Glacier (USA Variant)'), 'US');
+  assert.equal(detectRegion('Apple iPhone 18 Pro Max 512GB 6.9 inch ESIM - Black (US Variant)'), 'US');
+  assert.equal(detectRegion('Apple iPhone 18 Pro Max 512GB 6.9 inch ESIM - Burgundy (Japanese Variant)'), 'JP');
+  assert.equal(detectRegion('Apple iPhone 18 Pro 1TB 6.3 inch ESIM - Black (Middle East Variant)'), 'ME');
+  assert.equal(detectRegion('iPhone 18 Plus variant 256GB'), null, '"us variant" must not match inside "plus variant"');
 });

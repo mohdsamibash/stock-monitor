@@ -11,6 +11,10 @@ export const soooq = makeShopifyAdapter({ id: 'soooq', name: 'Soooq', base: 'htt
 // Web Store sells new grey imports and used phones; 'used'/'refurbished' listings are rejected by the matcher.
 export const webstore = makeShopifyAdapter({ id: 'webstore', name: 'Web Store', base: 'https://webstoreshops.com', collections: ['*'] });
 export const store990 = makeShopifyAdapter({ id: 'store990', name: '990 Store', base: 'https://990store.com', collections: ['apple'] });
+// FCC (Future Communications Company, future.com.kw), added 2026-10-06. Each region is its own product
+// ("... - Glacier (Japanese Variant)" / "(USA Variant)" / "(Middle East Variant)"); Pro is in iphone-18, Pro Max
+// only in the big Apple collection (2 pages of 250). robots.txt allows these feeds.
+export const fcc = makeShopifyAdapter({ id: 'fcc', name: 'FCC', base: 'https://future.com.kw', collections: ['iphone-18', 'future-store-apple-products'], pages: 3 });
 
 // Added 2026-10-05 (all answered plain requests; robots.txt allows these feeds). Jarir left out: DataDome bot
 // protection and /api/ disallowed in its robots.txt.

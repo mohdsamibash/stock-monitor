@@ -61,10 +61,10 @@ export const EXCLUDE_KEYWORDS = [...ACCESSORY_KEYWORDS, ...GREY_KEYWORDS];
 
 // Region tags shown on OTHERS chips. First match wins; when nothing matches the tag is left empty (never guessed).
 export const REGION_PATTERNS = [
-  ['JP', ['japanese', 'japan', 'jp version', 'jp vr', 'ياباني']],
-  ['US', ['american', 'us version', 'usa version', 'us vr', 'united states', 'امريكي', 'أمريكي']],
-  ['HK', ['hong kong', 'hk version']],
-  ['ME', ['middle east', 'me version', 'arabic version', 'الشرق الأوسط']],
+  ['JP', ['japanese', 'japan', 'jp version', 'jp variant', 'jp vr', 'ياباني']],
+  ['US', ['american', 'us version', 'usa version', 'us variant', 'usa variant', 'usa', 'us vr', 'united states', 'امريكي', 'أمريكي']],
+  ['HK', ['hong kong', 'hk version', 'hk variant']],
+  ['ME', ['middle east', 'me version', 'me variant', 'arabic version', 'الشرق الأوسط']],
 ];
 
 // Listings must contain at least one of these to count as a phone (defence in depth against

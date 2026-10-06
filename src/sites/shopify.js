@@ -5,15 +5,20 @@ import { fetchPolite } from '../lib/http.js';
 import { CatalogAdapter, STATUS } from './base.js';
 
 // collections: handles, or null/'*' entries to read the newest 250 products of the whole store (/products.json).
-export function makeShopifyAdapter({ id, name, base, collections }) {
+// pages: how many 250-product pages to read per collection (big mixed collections spill onto page 2+).
+export function makeShopifyAdapter({ id, name, base, collections, pages = 1 }) {
   class ShopifyAdapter extends CatalogAdapter {
     constructor() { super({ id, name, baseUrl: base, group: 'others' }); }
     async fetchListings() {
       const seen = new Set(); const products = [];
       for (const handle of collections) {
         const path = handle === '*' ? '/products.json?limit=250' : `/collections/${handle}/products.json?limit=250`;
-        const res = await fetchPolite(`${base}${path}`, { expect: 'json' });
-        for (const p of res.body.products || []) if (!seen.has(p.id)) { seen.add(p.id); products.push(p); }
+        for (let page = 1; page <= pages; page++) {
+          const res = await fetchPolite(`${base}${path}${page > 1 ? `&page=${page}` : ''}`, { expect: 'json' });
+          const batch = res.body.products || [];
+          for (const p of batch) if (!seen.has(p.id)) { seen.add(p.id); products.push(p); }
+          if (batch.length < 250) break; // last page
+        }
       }
       const out = [];
       for (const p of products) {

@@ -2,7 +2,7 @@
 // No cookies and no IP addresses are stored: a visitor is a hash of (Kuwait day, IP, user agent), so the ID changes every day.
 // Needs the D1 binding ANALYTICS_DB (see wrangler.toml).
 const TYPES = new Set(['view', 'tab', 'filter', 'click', 'refresh']);
-const PAGES = new Set(['home', 'iphone18', 'apple']); // home and apple only send 'view'
+const PAGES = new Set(['home', 'iphone18', 'products']); // home and products only send 'view'
 const BOT = /bot|crawl|spider|slurp|headless|preview|facebookexternalhit|whatsapp|telegram|curl|wget|python|node-fetch|axios|lighthouse|pingdom|uptime/i;
 const ORIGIN = /^https:\/\/((www\.)?mohdbash\.com|[a-z0-9-]+\.mohdbashweb\.pages\.dev)$/;
 const MAX_EVENTS_PER_VISITOR_DAY = 300;

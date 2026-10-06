@@ -98,6 +98,39 @@
     const want = state.group === 'official' && !state.filters.retailer ? '' : `#${state.group}${state.filters.retailer ? '/' + state.filters.retailer : ''}`;
     if (location.hash !== want) history.replaceState(null, '', want || location.pathname + location.search);
   }
+  // ---------- chips ----------
+  const REGION_NAME = { ME: 'Middle East version', JP: 'Japanese version (camera shutter sound always on)', US: 'US version (eSIM only)', HK: 'Hong Kong version' };
+  const rankStatus = (st) => (st === 'IN_STOCK' ? 2 : st === 'OUT_OF_STOCK' ? 1 : 0);
+  const byBest = (x, y) => rankStatus(y.status) - rankStatus(x.status) || (x.priceKWD ?? 1e9) - (y.priceKWD ?? 1e9);
+  function fillChip(chip, s, r, key, offers, cheapestMap, others) {
+    chip.className = s.linkOnly ? 'chip LINK' : `chip ${r.status}`;
+    if (r.url) { chip.href = r.url; chip.target = '_blank'; chip.rel = 'noopener'; chip.dataset.site = s.id; }
+    const best = cheapestMap[key]; if (best && best.siteId === s.id && r.status === 'IN_STOCK' && (best.priceKWD == null || r.priceKWD === best.priceKWD)) chip.classList.add('best');
+    chip.title = s.linkOnly ? `${s.name}: opens this exact variant on their site (no automatic status)` : `${s.name}: ${STATUS_LABEL[r.status]}${r.note ? ` (${r.note})` : ''}${r.reason ? `\n${r.reason}` : ''}${r.priceKWD != null ? ` · ${kwd(r.priceKWD)}` : ''}${r.region ? `\n${REGION_NAME[r.region] || r.region}` : ''}${offers ? '\nTap a region to switch' : ''}${r.title ? `\n${r.title}` : ''}${r.error ? `\n${r.error}` : ''}${s.checkedAt ? `\nChecked ${relative(s.checkedAt)}` : ''}`;
+    chip.innerHTML = '';
+    const top = el('span', 'top');
+    top.appendChild(el('span', 'r', s.name));
+    if (r.priceKWD != null && (r.status !== 'NOT_LISTED' || r.note)) top.appendChild(el('span', 'p', kwdShort(r.priceKWD)));
+    chip.appendChild(top);
+    const lowQty = others && r.status === 'IN_STOCK' && r.qty && r.qty <= 5;
+    const sub = el('span', 's', s.linkOnly ? 'Check site ↗' : lowQty ? `Only ${r.qty} left` : (r.note || STATUS_LABEL[r.status]));
+    if (offers) {
+      const pills = el('span', 'rgs');
+      for (const o of offers) {
+        const pill = el('span', `tag tag-${o.region || 'XX'} rg${o.region === r.region ? ' on' : ''}`, o.region || '?');
+        pill.setAttribute('role', 'button'); pill.tabIndex = 0;
+        pill.setAttribute('aria-pressed', String(o.region === r.region));
+        pill.title = `${REGION_NAME[o.region] || 'Region not stated'} · ${STATUS_LABEL[o.status]}${o.priceKWD != null ? ` · ${kwd(o.priceKWD)}` : ''}`;
+        const pick = (ev) => { ev.preventDefault(); ev.stopPropagation(); if (o.region !== r.region) fillChip(chip, s, { ...r, ...o }, key, offers, cheapestMap, others); };
+        pill.addEventListener('click', pick);
+        pill.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') pick(ev); });
+        pills.appendChild(pill);
+      }
+      sub.appendChild(pills);
+    } else if (others && r.region) { const t = el('span', `tag tag-${r.region}`, r.region); t.title = REGION_NAME[r.region] || r.region; sub.appendChild(t); }
+    chip.appendChild(sub);
+  }
+
   // ---------- shop picker ----------
   // The picker is one node that render() places in the first model heading (it survives sections being rebuilt).
   const shopWrap = $('#shop-wrap'); const sq = (s) => shopWrap.querySelector(s);
@@ -200,8 +233,6 @@
           // Official: one chip per reseller, always. Others: only shops that list this variant, in stock first, cheapest first.
           let rowSites = sites.map((s) => ({ s, r: s.results.find((x) => x.key === key) || { status: 'ERROR' } }));
           if (others) {
-            // A shop selling this variant in several regions (e.g. 990 Store ME + US) gets one chip per region.
-            rowSites = rowSites.flatMap(({ s, r }) => (r.offers?.length > 1 ? r.offers.map((o) => ({ s, r: { ...r, ...o } })) : [{ s, r }]));
             rowSites = rowSites.filter(({ r }) => r.status === 'IN_STOCK' || r.status === 'OUT_OF_STOCK')
               .filter(({ r }) => !f.instock || r.status === 'IN_STOCK')
               .sort((x, y) => (x.r.status === 'IN_STOCK' ? 0 : 1) - (y.r.status === 'IN_STOCK' ? 0 : 1) || (x.r.priceKWD ?? 1e9) - (y.r.priceKWD ?? 1e9));
@@ -209,18 +240,10 @@
           }
           for (const { s, r } of rowSites) {
             if (!s.linkOnly) { cardCells++; if (r.status === 'IN_STOCK') { rowIn++; cardIn++; } }
-            const chip = el(r.url ? 'a' : 'span', s.linkOnly ? 'chip LINK' : `chip ${r.status}`);
-            if (r.url) { chip.href = r.url; chip.target = '_blank'; chip.rel = 'noopener'; chip.dataset.site = s.id; }
-            const best = cheapestMap[key]; if (best && best.siteId === s.id && r.status === 'IN_STOCK' && (best.priceKWD == null || r.priceKWD === best.priceKWD)) chip.classList.add('best');
-            chip.title = s.linkOnly ? `${s.name}: opens this exact variant on their site (no automatic status)` : `${s.name}: ${STATUS_LABEL[r.status]}${r.note ? ` (${r.note})` : ''}${r.reason ? `\n${r.reason}` : ''}${r.priceKWD != null ? ` · ${kwd(r.priceKWD)}` : ''}${r.title ? `\n${r.title}` : ''}${r.error ? `\n${r.error}` : ''}${s.checkedAt ? `\nChecked ${relative(s.checkedAt)}` : ''}`;
-            const top = el('span', 'top');
-            top.appendChild(el('span', 'r', s.name));
-            if (r.priceKWD != null && (r.status !== 'NOT_LISTED' || r.note)) top.appendChild(el('span', 'p', kwdShort(r.priceKWD)));
-            chip.appendChild(top);
-            const lowQty = others && r.status === 'IN_STOCK' && r.qty && r.qty <= 5;
-            const sub = el('span', 's', s.linkOnly ? 'Check site ↗' : lowQty ? `Only ${r.qty} left` : (r.note || STATUS_LABEL[r.status]));
-            if (others && r.region) { const t = el('span', `tag tag-${r.region}`, r.region); t.title = { ME: 'Middle East version', JP: 'Japanese version (camera shutter sound always on)', US: 'US version (eSIM only)', HK: 'Hong Kong version' }[r.region] || r.region; sub.appendChild(t); }
-            chip.appendChild(sub);
+            const chip = el(r.url ? 'a' : 'span');
+            // Several regions at this shop (e.g. 990 Store ME + US): one chip, best region first, region pills switch it.
+            const offers = others && r.offers?.length > 1 ? [...r.offers].sort(byBest) : null;
+            fillChip(chip, s, r, key, offers, cheapestMap, others);
             chips.appendChild(chip);
           }
           if (f.instock && !rowIn) continue;
@@ -230,7 +253,6 @@
             const op = el('span', 'offp'); op.appendChild(el('span', null, 'Official')); op.appendChild(document.createTextNode(kwdShort(officialPrice[key])));
             capEl.title = `Official price (Gait / Xcite): ${kwd(officialPrice[key])}`; capEl.appendChild(op);
           }
-          if (f.retailer && rowSites.length > 1) chips.classList.add('multi'); // one shop, several regions
           const row = el('div', 'row'); row.appendChild(capEl); row.appendChild(chips); card.appendChild(row); rows++;
         }
         if (!rows) continue;

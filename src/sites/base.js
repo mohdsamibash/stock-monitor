@@ -30,6 +30,7 @@ export function fillMatrix(model, found, checkedAt = new Date().toISOString()) {
         reason: hit?.reason ?? null,
         region: hit?.region ?? null,
         qty: hit?.qty ?? null,
+        ...(hit?.offers?.length > 1 ? { offers: hit.offers } : {}), // several regions at this shop
         checkedAt,
       });
     }
@@ -57,12 +58,22 @@ export function addListing(found, { title, colorHint, capacityHint, modelHint, s
   const key = variantKey(cls.modelId, cls.color, cls.capacity);
   const entry = { status, priceKWD: parsePriceKWD(price), url, title, note: note || null, reason: reason || null, region: allowGrey ? (region ?? detectRegion(title)) : null, qty: qty ?? null, ...cls };
   const prev = found.get(key);
-  if (!prev) found.set(key, entry);
-  else {
-    const rank = (s) => (s === STATUS.IN_STOCK ? 2 : s === STATUS.OUT_OF_STOCK ? 1 : 0);
-    if (rank(entry.status) > rank(prev.status) || (rank(entry.status) === rank(prev.status) && (entry.priceKWD ?? Infinity) < (prev.priceKWD ?? Infinity))) found.set(key, entry);
-  }
+  // Others group: a shop may list the same variant in several regions (e.g. 990 Store's ME and US versions as
+  // separate products). Keep the best one per region in `offers`; the row itself stays the best offer overall.
+  const offers = allowGrey ? mergeOffer(prev?.offers ?? (prev ? [offerOf(prev)] : []), offerOf(entry)) : undefined;
+  if (!prev || better(entry, prev)) found.set(key, entry);
+  if (offers) found.get(key).offers = offers;
   return key;
+}
+
+const rankOf = (s) => (s === STATUS.IN_STOCK ? 2 : s === STATUS.OUT_OF_STOCK ? 1 : 0);
+/** In stock beats out of stock beats anything else; then the lower price wins. */
+const better = (a, b) => rankOf(a.status) > rankOf(b.status) || (rankOf(a.status) === rankOf(b.status) && (a.priceKWD ?? Infinity) < (b.priceKWD ?? Infinity));
+const offerOf = (e) => ({ region: e.region ?? null, status: e.status, priceKWD: e.priceKWD, url: e.url ?? null, note: e.note ?? null, qty: e.qty ?? null });
+function mergeOffer(offers, o) {
+  const i = offers.findIndex((x) => x.region === o.region);
+  if (i === -1) return [...offers, o];
+  return better(o, offers[i]) ? offers.map((x, j) => (j === i ? o : x)) : offers;
 }
 
 export function makeLogger(id) { return logger(`site:${id}`); }

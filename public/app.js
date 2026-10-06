@@ -200,6 +200,8 @@
           // Official: one chip per reseller, always. Others: only shops that list this variant, in stock first, cheapest first.
           let rowSites = sites.map((s) => ({ s, r: s.results.find((x) => x.key === key) || { status: 'ERROR' } }));
           if (others) {
+            // A shop selling this variant in several regions (e.g. 990 Store ME + US) gets one chip per region.
+            rowSites = rowSites.flatMap(({ s, r }) => (r.offers?.length > 1 ? r.offers.map((o) => ({ s, r: { ...r, ...o } })) : [{ s, r }]));
             rowSites = rowSites.filter(({ r }) => r.status === 'IN_STOCK' || r.status === 'OUT_OF_STOCK')
               .filter(({ r }) => !f.instock || r.status === 'IN_STOCK')
               .sort((x, y) => (x.r.status === 'IN_STOCK' ? 0 : 1) - (y.r.status === 'IN_STOCK' ? 0 : 1) || (x.r.priceKWD ?? 1e9) - (y.r.priceKWD ?? 1e9));
@@ -209,7 +211,7 @@
             if (!s.linkOnly) { cardCells++; if (r.status === 'IN_STOCK') { rowIn++; cardIn++; } }
             const chip = el(r.url ? 'a' : 'span', s.linkOnly ? 'chip LINK' : `chip ${r.status}`);
             if (r.url) { chip.href = r.url; chip.target = '_blank'; chip.rel = 'noopener'; chip.dataset.site = s.id; }
-            const best = cheapestMap[key]; if (best && best.siteId === s.id && r.status === 'IN_STOCK') chip.classList.add('best');
+            const best = cheapestMap[key]; if (best && best.siteId === s.id && r.status === 'IN_STOCK' && (best.priceKWD == null || r.priceKWD === best.priceKWD)) chip.classList.add('best');
             chip.title = s.linkOnly ? `${s.name}: opens this exact variant on their site (no automatic status)` : `${s.name}: ${STATUS_LABEL[r.status]}${r.note ? ` (${r.note})` : ''}${r.reason ? `\n${r.reason}` : ''}${r.priceKWD != null ? ` · ${kwd(r.priceKWD)}` : ''}${r.title ? `\n${r.title}` : ''}${r.error ? `\n${r.error}` : ''}${s.checkedAt ? `\nChecked ${relative(s.checkedAt)}` : ''}`;
             const top = el('span', 'top');
             top.appendChild(el('span', 'r', s.name));
@@ -228,6 +230,7 @@
             const op = el('span', 'offp'); op.appendChild(el('span', null, 'Official')); op.appendChild(document.createTextNode(kwdShort(officialPrice[key])));
             capEl.title = `Official price (Gait / Xcite): ${kwd(officialPrice[key])}`; capEl.appendChild(op);
           }
+          if (f.retailer && rowSites.length > 1) chips.classList.add('multi'); // one shop, several regions
           const row = el('div', 'row'); row.appendChild(capEl); row.appendChild(chips); card.appendChild(row); rows++;
         }
         if (!rows) continue;

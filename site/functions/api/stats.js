@@ -1,5 +1,5 @@
 // Cloudflare Pages Function: /api/stats — numbers for the private dashboard at mohdbash.com/dashboard.
-// GET with "Authorization: Bearer <DASHBOARD_PASSWORD>" (a Pages secret). ?days=1|7|30|90&page=all|home|iphone18
+// GET with "Authorization: Bearer <DASHBOARD_PASSWORD>" (a Pages secret). ?days=1|7|30|90&page=all|home|iphone18|apple
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 const kuwaitDay = (ms) => new Date(ms + 3 * 3600e3).toISOString().slice(0, 10);
 async function digest(text) { return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))); }
@@ -15,7 +15,7 @@ export async function onRequestGet({ request, env }) {
   }
   const params = new URL(request.url).searchParams;
   const days = Math.min(90, Math.max(1, parseInt(params.get('days') || '7', 10) || 7));
-  const page = ['home', 'iphone18'].includes(params.get('page')) ? params.get('page') : 'all';
+  const page = ['home', 'iphone18', 'apple'].includes(params.get('page')) ? params.get('page') : 'all';
   const P = page === 'all' ? '' : ` AND page = '${page}'`; // whitelisted above
   const now = Date.now();
   const today = kuwaitDay(now);

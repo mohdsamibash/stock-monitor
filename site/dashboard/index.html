@@ -135,7 +135,8 @@
         <nav class="seg" id="pagesel" aria-label="Page">
           <button type="button" data-page="all" aria-pressed="true">All pages</button>
           <button type="button" data-page="home">Home</button>
-          <button type="button" data-page="iphone18">Stock page</button>
+          <button type="button" data-page="iphone18">Stock</button>
+          <button type="button" data-page="apple">Apple</button>
         </nav>
         <nav class="seg" id="range" aria-label="Period">
           <button type="button" data-days="1">Today</button>
@@ -211,7 +212,7 @@
   let password = store.get(KEY) || store.get('iphone18-dash') || ''; // older key from /iphone18/dashboard
   let days = Number(store.get('dash-days')) || 7, page = store.get('dash-page') || 'all', metric = store.get('dash-metric') || 'visitors', timer = null, shopNames = {}, last = null;
   const METRIC = { visitors: ['unique visitors', 'Unique visitors per day'], visits: ['visits', 'Visits per day'], views: ['page views', 'Page views per day'] };
-  const PAGE_NAME = { home: 'Home (mohdbash.com)', iphone18: 'Stock page (/iphone18)' };
+  const PAGE_NAME = { home: 'Home (mohdbash.com)', iphone18: 'Stock page (/iphone18)', apple: 'Apple (/apple)' };
   const fmt = (n) => Number(n || 0).toLocaleString('en-US');
   const dayLabel = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
   const regionNames = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }); } catch { return null; } })();
@@ -271,7 +272,7 @@
     $('#k-views-note').textContent = todayNote(d.today.views);
     $('#k-live').textContent = fmt(d.liveNow);
     $('#k-live-lbl').textContent = d.page === 'all' ? 'On the site now' : 'On the page now';
-    const stock = d.page !== 'home';
+    const stock = d.page === 'all' || d.page === 'iphone18'; // tabs, Filter, shop taps, Refresh exist only on the stock page
     for (const el of document.querySelectorAll('.stock-only')) el.hidden = !stock;
     // 4th number: Refresh presses for the stock page; pages per visitor for Home.
     $('#k-4-lbl').textContent = stock ? 'Refresh presses' : 'Visits per visitor';
@@ -279,7 +280,7 @@
     $('#k-4-note').textContent = stock ? `${period}${d.page === 'all' ? ' · stock page' : ''}` : period;
     // Pages card: always both pages; tap a row to switch to it.
     const pl = $('#l-pages'); pl.innerHTML = '';
-    const rowsP = ['home', 'iphone18'].map((k) => d.pages.find((r) => r.k === k) || { k, visitors: 0, views: 0 });
+    const rowsP = ['home', 'iphone18', 'apple'].map((k) => d.pages.find((r) => r.k === k) || { k, visitors: 0, views: 0 });
     const maxP = Math.max(1, ...rowsP.map((r) => r.visitors));
     for (const r of rowsP) {
       const li = document.createElement('li'); li.title = `Show only ${PAGE_NAME[r.k]}`;

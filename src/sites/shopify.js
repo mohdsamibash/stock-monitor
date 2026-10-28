@@ -10,14 +10,21 @@ export function makeShopifyAdapter({ id, name, base, collections, pages = 1 }) {
   class ShopifyAdapter extends CatalogAdapter {
     constructor() { super({ id, name, baseUrl: base, group: 'others' }); }
     async fetchListings() {
-      const seen = new Set(); const products = [];
+      const seen = new Set(); const products = []; let okFeeds = 0;
       for (const handle of collections) {
         const path = handle === '*' ? '/products.json?limit=250' : `/collections/${handle}/products.json?limit=250`;
-        for (let page = 1; page <= pages; page++) {
-          const res = await fetchPolite(`${base}${path}${page > 1 ? `&page=${page}` : ''}`, { expect: 'json' });
-          const batch = res.body.products || [];
-          for (const p of batch) if (!seen.has(p.id)) { seen.add(p.id); products.push(p); }
-          if (batch.length < 250) break; // last page
+        try {
+          for (let page = 1; page <= pages; page++) {
+            const res = await fetchPolite(`${base}${path}${page > 1 ? `&page=${page}` : ''}`, { expect: 'json' });
+            const batch = res.body.products || [];
+            for (const p of batch) if (!seen.has(p.id)) { seen.add(p.id); products.push(p); }
+            if (batch.length < 250) break; // last page
+          }
+          okFeeds++;
+        } catch (err) {
+          // One feed failing (renamed collection, short rate limit) shouldn't hide what the other feeds found.
+          if (handle === collections[collections.length - 1] && okFeeds === 0) throw err;
+          this.log.warn(`collection ${handle} skipped: ${err.message}`);
         }
       }
       const out = [];

@@ -79,15 +79,17 @@ class Chips extends CatalogAdapter {
   constructor() { super({ id: 'chips', name: 'Chips', baseUrl: 'https://chipsorders.com', group: 'others' }); }
   async fetchListings() {
     const out = [];
-    for (let page = 1; page <= 3; page++) {
-      const res = await fetchPolite(`https://api.chipsorders.com/api/v1/products?search=iphone%2018&per_page=48&page=${page}`, { expect: 'json', headers: { 'accept-language': 'en', country: 'KW' } });
+    // Filter to Apple phones/tablets: a plain text search ranks hundreds of accessories first, which hid most phones
+    // and the whole iPhone Duo range (its names don't contain "18"). ~190 items = 4 pages of 48.
+    for (let page = 1; page <= 6; page++) {
+      const res = await fetchPolite(`https://api.chipsorders.com/api/v1/products?search=iphone&category=mobile-tablet-devices&brand=apple&per_page=48&page=${page}`, { expect: 'json', headers: { 'accept-language': 'en', country: 'KW' } });
       const items = (res.body.data?.products || []).filter((p) => /iphone\s*18|iphone\s*duo/i.test(p.name));
       for (const p of items) {
         const online = p.inventory?.online || {}; const qty = Number(online.quantity || 0);
         out.push({ title: p.name, status: online.available && qty > 0 ? STATUS.IN_STOCK : STATUS.OUT_OF_STOCK, price: p.pricing?.current_price ?? p.pricing?.price,
           qty: qty > 0 ? qty : null, url: `https://chipsorders.com/kw-en/product/${p.slug}` });
       }
-      if (!items.length || !res.body.data?.pagination?.has_more) break; // stop once a page has no iPhone 18 phones
+      if (!res.body.data?.pagination?.has_more) break; // last page
     }
     return { listings: out, source: 'chips-api' };
   }
